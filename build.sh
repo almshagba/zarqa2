@@ -11,20 +11,20 @@ echo "📅 Build started at: $(date)"
 echo "🐍 Python version:"
 python --version
 
-# Upgrade pip
-echo "📦 Upgrading pip..."
-pip install --upgrade pip
+# Upgrade pip and build tools for Python 3.13 compatibility
+echo "📦 Upgrading pip and build tools..."
+pip install --upgrade pip setuptools wheel
 
 # Install Python dependencies with optimizations
 echo "📚 Installing Python dependencies..."
 
-# Install numpy first (pandas dependency)
+# Install numpy first (pandas dependency) - Python 3.13 compatible
 echo "🔢 Installing numpy..."
-pip install --only-binary=all numpy==1.24.4
+pip install --only-binary=all numpy==1.26.4
 
-# Install pandas with pre-compiled binaries
+# Install pandas with pre-compiled binaries - Python 3.13 compatible
 echo "🐼 Installing pandas..."
-pip install --only-binary=all pandas==2.0.3
+pip install --only-binary=all pandas==2.2.2
 
 # Install remaining dependencies
 echo "📦 Installing remaining dependencies..."
