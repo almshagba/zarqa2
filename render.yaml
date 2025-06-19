@@ -1,58 +1,8 @@
-# Render Blueprint Configuration
-# This file defines the infrastructure for deploying on Render
-
 services:
-  # Web Service
   - type: web
     name: zarqa2
     env: python
+    build:
+      pythonVersion: 3.12.3
     buildCommand: "./build.sh"
-build:
-  pythonVersion: 3.12.3    
-  startCommand: "gunicorn app:app"
-    healthCheckPath: "/"
-    autoDeploy: true
-    branch: master
-    envVars:
-      - key: FLASK_ENV
-        value: production
-      - key: SECRET_KEY
-        generateValue: true
-      - key: PYTHONUNBUFFERED
-        value: "1"
-      - key: MAX_CONTENT_LENGTH
-        value: "16777216"
-      - key: UPLOAD_FOLDER
-        value: "static/uploads"
-      - key: WEB_CONCURRENCY
-        value: "2"
-      - key: WORKER_TIMEOUT
-        value: "120"
-      - key: LOG_LEVEL
-        value: "INFO"
-      - key: SECURE_SSL_REDIRECT
-        value: "true"
-      - key: SESSION_COOKIE_SECURE
-        value: "true"
-      - key: SESSION_COOKIE_HTTPONLY
-        value: "true"
-
-  # Database Service
-  - type: pserv
-    name: employee-db
-    env: postgresql
-    plan: starter
-    region: oregon
-    ipAllowList: []
-    databases:
-      - name: employee_management
-        user: admin
-    
-# Environment Groups (optional)
-envVarGroups:
-  - name: app-settings
-    envVars:
-      - key: FLASK_ENV
-        value: production
-      - key: PYTHONUNBUFFERED
-        value: 1
+    startCommand: "gunicorn app:app"
