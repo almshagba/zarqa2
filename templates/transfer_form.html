@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">تسجيل نقل جديد</h5>
+    </div>
+    <div class="card-body">
+        <!-- حقل البحث بالرقم الوزاري -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <label for="search_ministry_number" class="form-label">البحث بالرقم الوزاري</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="search_ministry_number" placeholder="أدخل الرقم الوزاري للموظف">
+                    <button class="btn btn-outline-primary" type="button" id="search_employee_btn">
+                        <i class="fas fa-search"></i> بحث
+                    </button>
+                </div>
+                <div id="search_result" class="mt-2"></div>
+            </div>
+        </div>
+        
+        <!-- في بداية النموذج، نضيف شرط للتحقق من وضع التعديل -->
+        <div class="card-header bg-primary text-white">
+            <h3>{% if edit_mode %}تعديل سجل نقل{% else %}إضافة سجل نقل جديد{% endif %}</h3>
+        </div>
+        
+        <!-- في النموذج، نضيف قيم افتراضية من سجل النقل الحالي في وضع التعديل -->
+        <form method="post" id="transfer_form">
+            <!-- الموظف -->
+            <div class="mb-3">
+                <label for="employee_id" class="form-label">الموظف</label>
+                <select class="form-select" id="employee_id" name="employee_id" required>
+                    <option value="">اختر الموظف</option>
+                    {% for employee in employees %}
+                    <option value="{{ employee.id }}" {% if edit_mode and transfer.employee_id == employee.id %}selected{% endif %}>{{ employee.name }} ({{ employee.ministry_number }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- المدرسة الحالية -->
+            <div class="mb-3">
+                <label for="from_school_id" class="form-label">المدرسة الحالية</label>
+                <select class="form-select" id="from_school_id" name="from_school_id" required>
+                    <option value="">اختر المدرسة</option>
+                    {% for school in schools %}
+                    <option value="{{ school.id }}" {% if edit_mode and transfer.from_school_id == school.id %}selected{% endif %}>{{ school.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- الوظيفة الحالية -->
+            <div class="mb-3">
+                <label for="from_job" class="form-label">الوظيفة الحالية</label>
+                <input type="text" class="form-control" id="from_job" name="from_job" required {% if edit_mode %}value="{{ transfer.from_job }}"{% endif %}>
+            </div>
+            
+            <!-- المدرسة المنقول إليها -->
+            <div class="mb-3">
+                <label for="to_school_id" class="form-label">المدرسة المنقول إليها</label>
+                <select class="form-select" id="to_school_id" name="to_school_id" required>
+                    <option value="">اختر المدرسة</option>
+                    {% for school in schools %}
+                    <option value="{{ school.id }}" {% if edit_mode and transfer.to_school_id == school.id %}selected{% endif %}>{{ school.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- الوظيفة الجديدة -->
+            <div class="mb-3">
+                <label for="to_job" class="form-label">الوظيفة الجديدة</label>
+                <input type="text" class="form-control" id="to_job" name="to_job" required {% if edit_mode %}value="{{ transfer.to_job }}"{% endif %}>
+            </div>
+            
+            <!-- تاريخ النقل -->
+            <div class="mb-3">
+                <label for="transfer_date" class="form-label">تاريخ النقل</label>
+                <input type="date" class="form-control" id="transfer_date" name="transfer_date" required {% if edit_mode %}value="{{ transfer.transfer_date.strftime('%Y-%m-%d') }}"{% endif %}>
+            </div>
+            
+            <!-- سبب النقل -->
+            <div class="mb-3">
+                <label for="reason" class="form-label">سبب النقل</label>
+                <textarea class="form-control" id="reason" name="reason" rows="3">{% if edit_mode %}{{ transfer.reason }}{% endif %}</textarea>
+            </div>
+            
+            <!-- أزرار التحكم -->
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">{% if edit_mode %}حفظ التغييرات{% else %}إضافة{% endif %}</button>
+                <a href="{{ url_for('main.transfers_list') }}" class="btn btn-secondary">إلغاء</a>
+            </div>
+        </form>
+        
+        <!-- تعديل سكريبت JavaScript لعدم تعيين تاريخ اليوم في وضع التعديل -->
+        <script>
+            // تعيين تاريخ اليوم كقيمة افتراضية لتاريخ النقل (فقط في وضع الإضافة)
+            {% if not edit_mode %}
+            document.getElementById('transfer_date').valueAsDate = new Date();
+            {% endif %}
+        </script>
+    </div>
+</div>
+
+<!-- إضافة JavaScript للبحث وتعبئة البيانات تلقائياً -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchBtn = document.getElementById('search_employee_btn');
+        const searchInput = document.getElementById('search_ministry_number');
+        const searchResult = document.getElementById('search_result');
+        const employeeSelect = document.getElementById('employee_id');
+        const fromSchoolSelect = document.getElementById('from_school_id');
+        const fromJobInput = document.getElementById('from_job');
+        
+        // تعيين تاريخ اليوم كقيمة افتراضية لتاريخ النقل
+        document.getElementById('transfer_date').valueAsDate = new Date();
+        
+        searchBtn.addEventListener('click', function() {
+            const ministryNumber = searchInput.value.trim();
+            if (!ministryNumber) {
+                searchResult.innerHTML = '<div class="alert alert-warning">الرجاء إدخال الرقم الوزاري</div>';
+                return;
+            }
+            
+            // إرسال طلب AJAX للبحث عن الموظف
+            fetch(`/api/employee/search?ministry_number=${ministryNumber}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // تم العثور على الموظف
+                        searchResult.innerHTML = `<div class="alert alert-success">تم العثور على الموظف: ${data.employee.name}</div>`;
+                        
+                        // تعبئة البيانات تلقائياً
+                        // تحديد الموظف في القائمة المنسدلة
+                        for (let i = 0; i < employeeSelect.options.length; i++) {
+                            if (employeeSelect.options[i].value == data.employee.id) {
+                                employeeSelect.selectedIndex = i;
+                                break;
+                            }
+                        }
+                        
+                        // تحديد المدرسة الحالية
+                        for (let i = 0; i < fromSchoolSelect.options.length; i++) {
+                            if (fromSchoolSelect.options[i].value == data.employee.school_id) {
+                                fromSchoolSelect.selectedIndex = i;
+                                break;
+                            }
+                        }
+                        
+                        // تعبئة الوظيفة الحالية
+                        fromJobInput.value = data.employee.job_title;
+                    } else {
+                        // لم يتم العثور على الموظف
+                        searchResult.innerHTML = '<div class="alert alert-danger">لم يتم العثور على موظف بهذا الرقم الوزاري</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    searchResult.innerHTML = '<div class="alert alert-danger">حدث خطأ أثناء البحث</div>';
+                });
+        });
+        
+        // البحث عند الضغط على Enter
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchBtn.click();
+            }
+        });
+    });
+</script>
+{% endblock %}

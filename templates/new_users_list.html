@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة المستخدمين{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-users"></i>
+                        إدارة المستخدمين
+                        <span class="badge bg-primary ms-2">{{ users|length }}</span>
+                    </h4>
+                    <div>
+                        {% if current_user.has_permission().get('add_new_user') %}
+                        <a href="{{ url_for('new_user.add_user') }}" class="btn btn-success">
+                            <i class="fas fa-user-plus"></i>
+                            إضافة مستخدم جديد
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    {% if users %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>#</th>
+                                    <th>اسم المستخدم</th>
+                                    <th>الاسم الكامل</th>
+                                    <th>نوع الحساب</th>
+                                    <th>الصلاحيات</th>
+                                    <th>تاريخ الإنشاء</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>
+                                        <strong>{{ user.username }}</strong>
+                                        {% if user.id == current_user.id %}
+                                        <span class="badge bg-info ms-1">أنت</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.full_name }}</td>
+                                    <td>
+                                        {% if user.is_admin %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-crown"></i> مدير
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-user"></i> مستخدم
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.is_admin %}
+                                        <span class="badge bg-success">جميع الصلاحيات</span>
+                                        {% else %}
+                                        <button type="button" class="btn btn-sm btn-outline-info" 
+                                                onclick="showPermissions({{ user.id }}, '{{ user.username }}')">
+                                            <i class="fas fa-eye"></i> عرض الصلاحيات
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else 'غير محدد' }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            {% if current_user.has_permission().get('manage_user_permissions') %}
+                                            <a href="{{ url_for('new_user.edit_user', user_id=user.id) }}" 
+                                               class="btn btn-sm btn-warning" title="تعديل">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            {% endif %}
+                                            
+                                            {% if current_user.has_permission().get('view_users_list') %}
+                                            <a href="{{ url_for('new_user.view_permissions', user_id=user.id) }}" 
+                                               class="btn btn-sm btn-info" title="عرض الصلاحيات">
+                                                <i class="fas fa-key"></i>
+                                            </a>
+                                            {% endif %}
+                                            
+                                            {% if current_user.has_permission().get('manage_user_permissions') and user.id != current_user.id %}
+                                            <button type="button" class="btn btn-sm btn-danger" 
+                                                    onclick="deleteUser({{ user.id }}, '{{ user.username }}')" title="حذف">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">لا توجد مستخدمين</h5>
+                        {% if current_user.has_permission().get('add_new_user') %}
+                        <a href="{{ url_for('new_user.add_user') }}" class="btn btn-primary mt-3">
+                            <i class="fas fa-user-plus"></i>
+                            إضافة أول مستخدم
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal لعرض الصلاحيات -->
+<div class="modal fade" id="permissionsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-key"></i>
+                    صلاحيات المستخدم: <span id="modalUsername"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="permissionsContent">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">جاري التحميل...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> إغلاق
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal تأكيد الحذف -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle text-danger"></i>
+                    تأكيد الحذف
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>هل أنت متأكد من حذف المستخدم <strong id="deleteUsername"></strong>؟</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>تحذير:</strong> هذا الإجراء لا يمكن التراجع عنه!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> إلغاء
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash"></i> حذف
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .table th {
+        background-color: #343a40;
+        color: white;
+        border: none;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .btn-group .btn {
+        margin: 0 1px;
+    }
+    
+    .badge {
+        font-size: 0.8em;
+    }
+    
+    .permission-category {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        background-color: #f8f9fa;
+    }
+    
+    .permission-item {
+        padding: 5px 10px;
+        margin: 2px;
+        border-radius: 15px;
+        font-size: 0.85em;
+    }
+    
+    .permission-enabled {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .permission-disabled {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let deleteUserId = null;
+    
+    function showPermissions(userId, username) {
+        document.getElementById('modalUsername').textContent = username;
+        document.getElementById('permissionsContent').innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">جاري التحميل...</span>
+                </div>
+            </div>
+        `;
+        
+        const modal = new bootstrap.Modal(document.getElementById('permissionsModal'));
+        modal.show();
+        
+        // جلب الصلاحيات عبر AJAX
+        fetch(`/new_users/permissions/${userId}`)
+            .then(response => response.text())
+            .then(html => {
+                // استخراج محتوى الصلاحيات من الاستجابة
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const permissionsDiv = doc.querySelector('.permissions-content');
+                
+                if (permissionsDiv) {
+                    document.getElementById('permissionsContent').innerHTML = permissionsDiv.innerHTML;
+                } else {
+                    document.getElementById('permissionsContent').innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            لا يمكن تحميل الصلاحيات في الوقت الحالي
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('permissionsContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle"></i>
+                        خطأ في تحميل الصلاحيات
+                    </div>
+                `;
+            });
+    }
+    
+    function deleteUser(userId, username) {
+        deleteUserId = userId;
+        document.getElementById('deleteUsername').textContent = username;
+        
+        const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        modal.show();
+    }
+    
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        if (deleteUserId) {
+            fetch(`/new_users/delete/${deleteUserId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // إغلاق المودال
+                    bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+                    
+                    // عرض رسالة نجاح
+                    showAlert(data.message, 'success');
+                    
+                    // إعادة تحميل الصفحة بعد ثانيتين
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    showAlert(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('خطأ في حذف المستخدم', 'error');
+            });
+        }
+    });
+    
+    function showAlert(message, type) {
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        
+        const alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                <i class="fas ${iconClass}"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        // إضافة التنبيه في أعلى الصفحة
+        const container = document.querySelector('.container-fluid');
+        container.insertAdjacentHTML('afterbegin', alertHtml);
+        
+        // إزالة التنبيه تلقائياً بعد 5 ثوان
+        setTimeout(() => {
+            const alert = container.querySelector('.alert');
+            if (alert) {
+                alert.remove();
+            }
+        }, 5000);
+    }
+</script>
+{% endblock %}

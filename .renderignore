@@ -1,0 +1,179 @@
+# Render ignore file
+# Files and directories to ignore during deployment
+
+# Local development files
+.env
+.env.local
+.env.development
+.env.railway
+*.log
+
+# Database files (local SQLite)
+*.db
+*.sqlite
+*.sqlite3
+instance/
+
+# Python cache and build files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+PYTHONPATH
+
+# Virtual environments
+venv/
+env/
+ENV/
+new_env/
+.venv/
+
+# IDE and editor files
+.idea/
+.vscode/
+.vs/
+*.swp
+*.swo
+*~
+.sublime-project
+.sublime-workspace
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Backup files
+backups/
+*.backup
+*.bak
+*.old
+*_backup_*
+
+# Test files and directories
+test_*
+*_test.py
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Documentation (keep only essential ones)
+*.md
+!README.md
+!RENDER_DEPLOYMENT.md
+
+# Deployment scripts for other platforms
+deploy.sh
+deploy_aws.py
+.elasticbeanstalk/
+.ebextensions/
+Dockerfile
+docker-compose*.yml
+railway.json
+.railwayignore
+
+# Windows batch files
+*.bat
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Local uploads (will be handled by cloud storage in production)
+static/uploads/forms/
+static/uploads/*.xlsx
+static/uploads/*.pdf
+static/uploads/*.doc*
+
+# Migration and maintenance scripts
+add_*.py
+fix_*.py
+migrate_*.py
+update_*.py
+create_*.py
+*_migration.py
+comprehensive_*.py
+debug_*.py
+direct_*.py
+final_*.py
+grant_*.py
+restore_*.py
+simple_*.py
+test_*.py
+upgrade_*.py
+
+# Configuration files for other platforms
+uwsgi.ini
+nginx.conf
+
+# Large media files
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.ico
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.mp3
+*.wav
+*.flac
+
+# Archive files
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+
+# Office documents (samples)
+*.xlsx
+*.xls
+*.doc
+*.docx
+*.pdf
+
+# Logs and runtime files
+*.log
+*.out
+*.err
+pid.txt
+
+# Cache directories
+.cache/
+.npm/
+node_modules/
+
+# Environment-specific files
+.env.*
+!.env.example
+!.env.render

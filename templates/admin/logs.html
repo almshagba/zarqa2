@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+
+{% block title %}سجلات المستخدمين{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-list-alt"></i>
+                        سجلات أنشطة المستخدمين
+                    </h4>
+                    <div>
+                        <a href="{{ url_for('admin.logs_stats') }}" class="btn btn-info btn-sm">
+                            <i class="fas fa-chart-bar"></i>
+                            الإحصائيات
+                        </a>
+                        <a href="{{ url_for('admin.export_logs', **current_filters) }}" class="btn btn-success btn-sm">
+                            <i class="fas fa-file-excel"></i>
+                            تصدير Excel
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- فلاتر البحث -->
+                    <form method="GET" class="mb-4">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <label for="user_id" class="form-label">المستخدم</label>
+                                <select name="user_id" id="user_id" class="form-select form-select-sm">
+                                    <option value="">جميع المستخدمين</option>
+                                    {% for user in users %}
+                                    <option value="{{ user.id }}" {% if current_filters.user_id == user.id %}selected{% endif %}>
+                                        {{ user.username }} - {{ user.full_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <label for="module" class="form-label">الوحدة</label>
+                                <select name="module" id="module" class="form-select form-select-sm">
+                                    <option value="">جميع الوحدات</option>
+                                    {% for module in modules %}
+                                    <option value="{{ module }}" {% if current_filters.module == module %}selected{% endif %}>
+                                        {{ module }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <label for="action" class="form-label">النشاط</label>
+                                <select name="action" id="action" class="form-select form-select-sm">
+                                    <option value="">جميع الأنشطة</option>
+                                    {% for action in actions %}
+                                    <option value="{{ action }}" {% if current_filters.action == action %}selected{% endif %}>
+                                        {{ action }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-1">
+                                <label for="status" class="form-label">الحالة</label>
+                                <select name="status" id="status" class="form-select form-select-sm">
+                                    <option value="">الكل</option>
+                                    <option value="success" {% if current_filters.status == 'success' %}selected{% endif %}>نجح</option>
+                                    <option value="failed" {% if current_filters.status == 'failed' %}selected{% endif %}>فشل</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <label for="date_from" class="form-label">من تاريخ</label>
+                                <input type="date" name="date_from" id="date_from" class="form-control form-control-sm" 
+                                       value="{{ current_filters.date_from or '' }}">
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <label for="date_to" class="form-label">إلى تاريخ</label>
+                                <input type="date" name="date_to" id="date_to" class="form-control form-control-sm" 
+                                       value="{{ current_filters.date_to or '' }}">
+                            </div>
+                            
+                            <div class="col-md-1">
+                                <label for="per_page" class="form-label">عدد النتائج</label>
+                                <select name="per_page" id="per_page" class="form-select form-select-sm">
+                                    <option value="25" {% if current_filters.per_page == 25 %}selected{% endif %}>25</option>
+                                    <option value="50" {% if current_filters.per_page == 50 %}selected{% endif %}>50</option>
+                                    <option value="100" {% if current_filters.per_page == 100 %}selected{% endif %}>100</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-search"></i>
+                                    بحث
+                                </button>
+                                <a href="{{ url_for('admin.view_logs') }}" class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-times"></i>
+                                    مسح الفلاتر
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <!-- معلومات النتائج -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="text-muted mb-0">
+                                عرض {{ logs.items|length }} من أصل {{ logs.total }} سجل
+                                (الصفحة {{ logs.page }} من {{ logs.pages }})
+                            </p>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <!-- زر مسح السجلات القديمة -->
+                            <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#clearLogsModal">
+                                <i class="fas fa-trash"></i>
+                                مسح السجلات القديمة
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- جدول السجلات -->
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>التاريخ والوقت</th>
+                                    <th>المستخدم</th>
+                                    <th>النشاط</th>
+                                    <th>الوحدة</th>
+                                    <th>تفاصيل الإجراء</th>
+                                    <th>الوصف</th>
+                                    <th>الحالة</th>
+                                    <th>عنوان IP</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs.items %}
+                                <tr>
+                                    <td>
+                                        <small>{{ log.created_at.strftime('%Y-%m-%d') }}</small><br>
+                                        <small class="text-muted">{{ log.created_at.strftime('%H:%M:%S') }}</small>
+                                    </td>
+                                    <td>
+                                        <strong>{{ log.user.username }}</strong><br>
+                                        <small class="text-muted">{{ log.user.full_name }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ log.action }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ log.module }}</span>
+                                    </td>
+                                    <td class="target-details">
+                                        {% if log.target_type and log.target_id %}
+                                            <div class="mb-1">
+                                                <strong>النوع:</strong> <span class="badge bg-info">{{ log.target_type }}</span>
+                                            </div>
+                                            <div>
+                                                <strong>المعرف:</strong> <code>#{{ log.target_id }}</code>
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if log.description %}
+                                            <div class="description-cell" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ log.description }}">
+                                                <small>{{ log.description[:80] }}{% if log.description|length > 80 %}...{% endif %}</small>
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if log.status == 'success' %}
+                                            <span class="badge bg-success">نجح</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">فشل</span>
+                                            {% if log.error_message %}
+                                                <br><small class="text-danger">{{ log.error_message }}</small>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ log.ip_address or '-' }}</small>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                                        لا توجد سجلات مطابقة للفلاتر المحددة
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- التصفح -->
+                    {% if logs.pages > 1 %}
+                    <nav aria-label="تصفح السجلات">
+                        <ul class="pagination justify-content-center">
+                            {% if logs.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('admin.view_logs', page=logs.prev_num, **current_filters) }}">
+                                        السابق
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for page_num in logs.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != logs.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('admin.view_logs', page=page_num, **current_filters) }}">
+                                                {{ page_num }}
+                                            </a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">…</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if logs.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('admin.view_logs', page=logs.next_num, **current_filters) }}">
+                                        التالي
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نافذة مسح السجلات القديمة -->
+<div class="modal fade" id="clearLogsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">مسح السجلات القديمة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.clear_logs') }}">
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        تحذير: هذه العملية لا يمكن التراجع عنها!
+                    </div>
+                    <div class="mb-3">
+                        <label for="days" class="form-label">مسح السجلات الأقدم من (بالأيام):</label>
+                        <input type="number" name="days" id="days" class="form-control" value="30" min="1" required>
+                        <div class="form-text">سيتم مسح جميع السجلات الأقدم من العدد المحدد من الأيام</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-danger">مسح السجلات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+    .description-cell {
+        max-width: 200px;
+        cursor: help;
+    }
+    
+    .badge {
+        font-size: 0.75em;
+    }
+    
+    .table td {
+        vertical-align: middle;
+    }
+    
+    .target-details {
+        font-size: 0.85em;
+    }
+    
+    .target-details .badge {
+        font-size: 0.7em;
+    }
+    
+    .target-details code {
+        font-size: 0.8em;
+        background-color: #f8f9fa;
+        padding: 2px 4px;
+        border-radius: 3px;
+    }
+    
+    /* تحسين عرض الجدول على الشاشات الصغيرة */
+    @media (max-width: 768px) {
+        .table-responsive {
+            font-size: 0.85em;
+        }
+        
+        .description-cell {
+            max-width: 150px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // تفعيل tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %}
+
+{% endblock %}

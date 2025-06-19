@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- بعد عنوان الصفحة وقبل قسم البحث -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>المغادرات</h1>
+    <div>
+        <!-- تم حذف رابط رصيد الإجازات -->
+        <a href="{{ url_for('leave.add_departure') }}" class="btn btn-primary">
+            <i class="fas fa-plus-circle"></i> إضافة مغادرة جديدة
+        </a>
+    </div>
+</div>
+
+<!-- فلترة وبحث -->
+<div class="card mb-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">بحث وفلترة</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" action="{{ url_for('leave.departures') }}">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="search" class="form-label">بحث</label>
+                    <input type="text" class="form-control" id="search" name="search" placeholder="اسم الموظف، الرقم الوزاري، الرقم الوطني" value="{{ search_term }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="department_id" class="form-label">القسم</label>
+                    <select class="form-select" id="department_id" name="department_id">
+                        <option value="">جميع الأقسام</option>
+                        {% for department in departments %}
+                        <option value="{{ department.id }}" {% if selected_department == department.id %}selected{% endif %}>{{ department.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="date_range" class="form-label">الفترة الزمنية</label>
+                    <select class="form-select" id="date_range" name="date_range">
+                        <option value="">جميع الفترات</option>
+                        <option value="today" {% if selected_date_range == 'today' %}selected{% endif %}>اليوم</option>
+                        <option value="week" {% if selected_date_range == 'week' %}selected{% endif %}>هذا الأسبوع</option>
+                        <option value="month" {% if selected_date_range == 'month' %}selected{% endif %}>هذا الشهر</option>
+                        <option value="year" {% if selected_date_range == 'year' %}selected{% endif %}>هذه السنة</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">بحث</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- جدول المغادرات -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>اسم الموظف</th>
+                        <th>الرقم الوزاري</th>
+                        <th>القسم</th>
+                        <th>التاريخ</th>
+                        <th>وقت البداية</th>
+                        <th>وقت النهاية</th>
+                        <th>عدد الساعات</th>
+                        <th>السبب</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for departure in departures %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ departure.employee.name }}</td>
+                        <td>{{ departure.employee.ministry_number }}</td>
+                        <td>{{ departure.employee.school.name }}</td>
+                        <td>{{ departure.start_date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ departure.start_time.strftime('%H:%M') if departure.start_time else '-' }}</td>
+                        <td>{{ departure.end_time.strftime('%H:%M') if departure.end_time else '-' }}</td>
+                        <td>{{ departure.hours_count|round(2) if departure.hours_count else '-' }}</td>
+                        <td>{{ departure.reason or '-' }}</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('leave.edit_departure', id=departure.id) }}" class="btn btn-sm btn-warning" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form method="POST" action="{{ url_for('leave.delete_departure', id=departure.id) }}" style="display:inline;" onsubmit="return window.confirm('هل أنت متأكد من حذف هذه المغادرة؟')">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="حذف">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="10" class="text-center">لا توجد مغادرات مسجلة</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- إضافة قسم لعرض ملخص المغادرات -->
+<div class="card mt-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">ملخص المغادرات</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h5>إجمالي ساعات المغادرات</h5>
+                        <h3 class="text-primary">{{ total_hours|round(2) }} ساعة</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h5>أيام محسوبة من المغادرات</h5>
+                        <!-- إزالة هذا السطر -->
+                        <!-- <small class="text-muted">كل 7 ساعات = يوم إجازة</small> -->
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h5>ساعات متبقية</h5>
+                        <h3 class="text-success">{{ remaining_hours|round(2) }} ساعة</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

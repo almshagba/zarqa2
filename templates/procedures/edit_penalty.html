@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}تعديل العقوبة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">تعديل العقوبة</h3>
+                </div>
+                
+                <form method="POST">
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- معلومات الموظف (للقراءة فقط) -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>اسم الموظف</label>
+                                    <input type="text" class="form-control" value="{{ penalty.employee.name }}" readonly>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>الرقم الوزاري</label>
+                                    <input type="text" class="form-control" value="{{ penalty.employee.ministry_number }}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <!-- نوع العقوبة -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="penalty_type">نوع العقوبة <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="penalty_type" name="penalty_type" required>
+                                        <option value="">اختر نوع العقوبة</option>
+                                        <option value="التنبيه" {{ 'selected' if penalty.penalty_type == 'التنبيه' }}>التنبيه</option>
+                                        <option value="الإنذار" {{ 'selected' if penalty.penalty_type == 'الإنذار' }}>الإنذار</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- المدرسة/القسم -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="school_id">المدرسة/القسم <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="school_id" name="school_id" required>
+                                        <option value="">اختر المدرسة/القسم</option>
+                                        {% for school in schools %}
+                                        <option value="{{ school.id }}" {{ 'selected' if school.id == penalty.school_id }}>{{ school.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <!-- رقم الكتاب -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="letter_number">رقم الكتاب <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="letter_number" 
+                                           name="letter_number" value="{{ penalty.letter_number }}" required>
+                                </div>
+                            </div>
+                            
+                            <!-- تاريخ الكتاب -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="letter_date">تاريخ الكتاب <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="letter_date" 
+                                           name="letter_date" value="{{ penalty.letter_date.strftime('%Y-%m-%d') }}" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- ملاحظات -->
+                        <div class="form-group">
+                            <label for="notes">ملاحظات</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3">{{ penalty.notes or '' }}</textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> حفظ التعديلات
+                        </button>
+                        <a href="{{ url_for('procedures.procedures_list') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> العودة
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

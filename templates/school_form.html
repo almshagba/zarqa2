@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">{% if school %}تعديل مدرسة{% else %}إضافة مدرسة جديدة{% endif %}</h5>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            <div class="mb-3">
+                <label for="name" class="form-label">اسم المدرسة</label>
+                <input type="text" class="form-control" id="name" name="name" value="{{ school.name if school else '' }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="gender" class="form-label">جنس المدرسة</label>
+                <select class="form-select" id="gender" name="gender" required>
+                    <option value="" disabled {% if not school %}selected{% endif %}>اختر جنس المدرسة</option>
+                    <option value="ذكور" {% if school and school.gender == 'ذكور' %}selected{% endif %}>ذكور</option>
+                    <option value="إناث" {% if school and school.gender == 'إناث' %}selected{% endif %}>إناث</option>
+                    <option value="مختلطة" {% if school and school.gender == 'مختلطة' %}selected{% endif %}>مختلطة</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="region" class="form-label">المنطقة</label>
+                <select class="form-select" id="region" name="region">
+                    <option value="" {% if not school or not school.region %}selected{% endif %}>اختر المنطقة</option>
+                    <option value="الهاشمية" {% if school and school.region == 'الهاشمية' %}selected{% endif %}>الهاشمية</option>
+                    <option value="بيرين" {% if school and school.region == 'بيرين' %}selected{% endif %}>بيرين</option>
+                    <option value="الحلابات" {% if school and school.region == 'الحلابات' %}selected{% endif %}>الحلابات</option>
+                    <option value="الظليل" {% if school and school.region == 'الظليل' %}selected{% endif %}>الظليل</option>
+                    <option value="الازرق" {% if school and school.region == 'الازرق' %}selected{% endif %}>الازرق</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="phone" class="form-label">رقم الهاتف</label>
+                <input type="text" class="form-control" id="phone" name="phone" value="{{ school.phone if school else '' }}">
+            </div>
+            <div class="mb-3">
+                <label for="address" class="form-label">العنوان</label>
+                <input type="text" class="form-control" id="address" name="address" value="{{ school.address if school else '' }}">
+            </div>
+            <button type="submit" class="btn btn-primary">حفظ</button>
+            <a href="{{ url_for('school.schools') }}" class="btn btn-secondary">إلغاء</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

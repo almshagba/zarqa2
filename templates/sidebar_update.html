@@ -1,0 +1,31 @@
+<!-- إضافة هذا الجزء إلى القائمة الجانبية في base.html -->
+
+<!-- في قسم إدارة النظام -->
+{% if current_user.has_permission().get('view_users') or current_user.has_permission().get('edit_users') %}
+<li class="nav-item">
+    <a class="nav-link" href="{{ url_for('new_user.users_list') }}">
+        <i class="fas fa-users-cog"></i>
+        <span>إدارة المستخدمين (محدث)</span>
+    </a>
+</li>
+{% endif %}
+
+<!-- أو يمكن استبدال الرابط القديم بالجديد -->
+<!-- استبدال -->
+<!-- 
+<li class="nav-item">
+    <a class="nav-link" href="{{ url_for('admin.manage_users') }}">
+        <i class="fas fa-users"></i>
+        <span>إدارة المستخدمين</span>
+    </a>
+</li>
+-->
+<!-- بـ -->
+<!-- 
+<li class="nav-item">
+    <a class="nav-link" href="{{ url_for('new_user.users_list') }}">
+        <i class="fas fa-users-cog"></i>
+        <span>إدارة المستخدمين</span>
+    </a>
+</li>
+-->

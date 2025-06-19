@@ -1,0 +1,499 @@
+{% extends 'base.html' %}
+
+{% block title %}سجل النقل{% endblock %}
+
+{% block head_extra %}
+<!-- مكتبات تصدير البيانات -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<!-- إضافة خط عربي لدعم اللغة العربية في PDF -->
+<script src="https://cdn.jsdelivr.net/npm/amiri-font@1.0.0/amiri.min.js"></script>
+<!-- تحميل احتياطي لخط Amiri -->
+<script>
+    // التحقق من تحميل خط Amiri
+    window.addEventListener('load', function() {
+        if (typeof window.AmiriFont === 'undefined') {
+            console.warn('تحميل خط Amiri من المصدر الاحتياطي...');
+            // تحميل الخط من مصدر بديل
+            var amiriScript = document.createElement('script');
+            amiriScript.src = "https://cdn.jsdelivr.net/npm/@khmyznikov/pdfmake-fonts@1.0.0/build/amiri/index.js";
+            document.head.appendChild(amiriScript);
+            
+            amiriScript.onload = function() {
+                if (typeof window.pdfMake !== 'undefined' && 
+                    typeof window.pdfMake.vfs !== 'undefined' && 
+                    typeof window.pdfMake.vfs['amiri-normal.ttf'] !== 'undefined') {
+                    window.AmiriFont = window.pdfMake.vfs['amiri-normal.ttf'];
+                    console.log('تم تحميل خط Amiri بنجاح من المصدر البديل');
+                }
+            };
+        }
+    });
+</script>
+<!-- أنماط إضافية للطباعة -->
+<style>
+    @media print {
+        /* إخفاء عناصر التحكم والأزرار عند الطباعة */
+        .btn-group, .btn, a.btn, .d-flex {
+            display: none !important;
+        }
+        
+        /* إخفاء رسالة النجاح عند الطباعة */
+        .alert {
+            display: none !important;
+        }
+        
+        /* إخفاء تاريخ الطباعة */
+        .print-date {
+            display: none !important;
+        }
+        
+        /* تعديل ترويسة الطباعة */
+        .print-header {
+            display: block !important;
+            text-align: center;
+            position: static !important; /* تغيير من fixed إلى static */
+            margin-bottom: 10px !important; /* تقليل المسافة بين الترويسة والجدول */
+        }
+        
+        /* تعديل هوامش الصفحة للطباعة */
+        @page {
+            size: landscape;
+            margin: 0.5cm; /* تقليل هوامش الصفحة */
+        }
+        
+        /* تعديل لإظهار الترويسة في الصفحة الأولى فقط */
+        @page :first {
+            margin-top: 0.5cm;
+        }
+        
+        @page :not(:first) {
+            margin-top: 0.5cm;
+        }
+        
+        /* إضافة قاعدة لإظهار الترويسة في الصفحة الأولى فقط */
+        .print-header {
+            display: none !important;
+        }
+        
+        /* عرض الترويسة في الصفحة الأولى فقط */
+        .first-page .print-header {
+            display: block !important;
+        }
+        
+        /* السماح للجدول بالامتداد على عدة صفحات */
+        tbody {
+            page-break-inside: auto !important;
+        }
+        
+        tr {
+            page-break-inside: avoid !important;
+            page-break-after: auto !important;
+        }
+        
+        /* إزالة الهوامش والحشوات الزائدة */
+        .table-container {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+        }
+        
+        /* تعديل لضمان بدء البيانات من الصفحة الأولى */
+        .table-responsive {
+            overflow: visible !important;
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+        }
+        
+        /* إزالة أي تأثيرات قد تمنع ظهور البيانات في الصفحة الأولى */
+        .container {
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        
+        /* تعديل لضمان عدم وجود فراغات زائدة */
+        h2, h3, h4, h5 {
+            margin: 2px 0 !important;
+            padding: 0 !important;
+            line-height: 1.2 !important;
+        }
+        
+        /* تقليل حجم الخط في الترويسة لتوفير مساحة */
+        .print-header h2 {
+            font-size: 16pt !important;
+        }
+        
+        .print-header h3 {
+            font-size: 14pt !important;
+        }
+        
+        .print-header h4, .print-header h5 {
+            font-size: 12pt !important;
+        }
+        
+        /* تعديل الجدول ليبدأ مباشرة بعد الترويسة */
+        table {
+            margin-top: 0 !important;
+        }
+        
+        /* تقليل المسافة بين الخلايا في الجدول */
+        td, th {
+            padding: 4px !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>سجل النقل</h2>
+        <div class="btn-group">
+            <button class="btn btn-light btn-sm" onclick="exportToExcel()">
+                <i class="fas fa-file-excel"></i> تصدير Excel
+            </button>
+            <button class="btn btn-light btn-sm ms-2" onclick="exportToPDF()">
+                <i class="fas fa-file-pdf"></i> تصدير PDF
+            </button>
+            <button class="btn btn-light btn-sm ms-2" onclick="printReport()">
+                <i class="fas fa-print"></i> طباعة
+            </button>
+            <a href="{{ url_for('main.add_transfer') }}" class="btn btn-primary ms-2">
+                <i class="fas fa-plus"></i> إضافة نقل جديد
+            </a>
+        </div>
+    </div>
+
+    <!-- قسم البحث والفلترة -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">البحث والفلترة</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('main.transfers_list') }}">
+                <div class="row">
+                    <!-- البحث العام -->
+                    <div class="col-md-4 mb-3">
+                        <label for="search" class="form-label">بحث</label>
+                        <input type="text" class="form-control" id="search" name="search" 
+                               placeholder="اسم الموظف، الرقم الوزاري، اسم المدرسة" 
+                               value="{{ search_term or '' }}">
+                    </div>
+                    
+                    <!-- فلتر المدرسة المنقول منها -->
+                    <div class="col-md-3 mb-3">
+                        <label for="from_school" class="form-label">المدرسة المنقول منها</label>
+                        <select class="form-select" id="from_school" name="from_school">
+                            <option value="">جميع المدارس</option>
+                            {% for school in schools %}
+                            <option value="{{ school.id }}" {% if from_school_filter == school.id|string %}selected{% endif %}>
+                                {{ school.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- فلتر المدرسة المنقول إليها -->
+                    <div class="col-md-3 mb-3">
+                        <label for="to_school" class="form-label">المدرسة المنقول إليها</label>
+                        <select class="form-select" id="to_school" name="to_school">
+                            <option value="">جميع المدارس</option>
+                            {% for school in schools %}
+                            <option value="{{ school.id }}" {% if to_school_filter == school.id|string %}selected{% endif %}>
+                                {{ school.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- أزرار التحكم -->
+                    <div class="col-md-2 mb-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search"></i> بحث
+                        </button>
+                        <a href="{{ url_for('main.transfers_list') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> إلغاء
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ترويسة الطباعة -->
+    <div class="print-header">
+        <h2>المملكة الأردنية الهاشمية</h2>
+        <h3>وزارة التربية والتعليم</h3>
+        <h4>مديرية التربية والتعليم لمنطقة الزرقاء الثانية</h4>
+        <h5>قسم شؤون الموظفين</h5>
+        <h5>النقل الداخلي</h5>
+        <p class="print-date">تاريخ الطباعة: {{ now.strftime('%Y-%m-%d') }}</p>
+    </div>
+
+    {% if transfers %}
+    <div class="table-responsive table-container">
+        <table class="table table-striped table-hover table-compact" id="transfersTable">
+            <!-- في جزء ترويسة الجدول، نضيف عمود للإجراءات -->
+            <thead class="table-dark">
+                <tr>
+                    <th>الرقم</th>
+                    <th>الاسم</th>
+                    <th>المؤهل</th>
+                    <th>التخصص</th>
+                    <th>الرقم الوزاري</th>
+                    <th>مكان العمل الحالي</th>
+                    <th>الوظيفة</th>
+                    <th>المدرسة المنقول إليها</th>
+                    <th>الوظيفة</th>
+                    <th>ملاحظات</th>
+                    <th>الإجراءات</th> <!-- عمود جديد -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for transfer in transfers %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ transfer.employee.name }}</td>
+                    <td>{{ transfer.employee.qualification }}</td>
+                    <td>
+                    {% if transfer.employee.qualification == 'بكالوريوس' %}
+                        {{ transfer.employee.bachelor_specialization }}
+                    {% elif transfer.employee.qualification == 'دبلوم عالي' %}
+                        {{ transfer.employee.high_diploma_specialization }}
+                    {% elif transfer.employee.qualification == 'ماجستير' %}
+                        {{ transfer.employee.masters_specialization }}
+                    {% elif transfer.employee.qualification == 'دكتوراه' %}
+                        {{ transfer.employee.phd_specialization }}
+                    {% endif %}
+                    </td>
+                    <td>{{ transfer.employee.ministry_number }}</td>
+                    <td>{{ transfer.from_school.name }}</td>
+                    <td>{{ transfer.from_job }}</td>
+                    <td>{{ transfer.to_school.name }}</td>
+                    <td>{{ transfer.to_job }}</td>
+                    <td>{{ transfer.reason }}</td>
+                    <!-- في جدول النقل، بعد السطر 276 -->
+                    <td class="text-center">
+                        <a href="{{ url_for('main.print_transfer', id=transfer.id) }}" 
+                           class="btn btn-sm btn-info" title="طباعة" target="_blank">
+                            <i class="fas fa-print"></i>
+                        </a>
+                        <a href="{{ url_for('main.edit_transfer', id=transfer.id) }}" class="btn btn-sm btn-warning" title="تعديل">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <form method="POST" action="{{ url_for('main.delete_transfer', id=transfer.id) }}" style="display:inline;">
+                            <button type="submit" class="btn btn-sm btn-danger" title="حذف" 
+                                    onclick="return window.confirm('هل أنت متأكد من حذف هذا السجل؟')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        لا توجد سجلات نقل حتى الآن.
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    // دالة تصدير البيانات إلى Excel
+    function exportToExcel() {
+        if (document.getElementById('transfersTable').rows.length <= 1) {
+            alert('لا توجد بيانات للتصدير');
+            return;
+        }
+        
+        const table = document.getElementById('transfersTable');
+        const fileName = `سجل_النقل_${new Date().toISOString().slice(0,10)}.xlsx`;
+        
+        // إنشاء ورقة عمل
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.table_to_sheet(table, {raw: true});
+        
+        // إضافة ورقة العمل إلى الملف
+        XLSX.utils.book_append_sheet(wb, ws, 'سجل النقل');
+        
+        // تنزيل الملف
+        XLSX.writeFile(wb, fileName);
+    }
+    
+    // دالة تصدير البيانات إلى PDF
+    function exportToPDF() {
+        if (document.getElementById('transfersTable').rows.length <= 1) {
+            alert('لا توجد بيانات للتصدير');
+            return;
+        }
+        
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4', true); // landscape orientation
+        
+        // التحقق من توفر الخط قبل استخدامه
+        if (typeof window.AmiriFont === 'undefined') {
+            alert('خطأ: لم يتم تحميل خط Amiri بشكل صحيح. سيتم استخدام الخط الافتراضي.');
+            // استخدام الخط الافتراضي
+            doc.setFont('Helvetica');
+        } else {
+            // إضافة دعم للغة العربية
+            doc.addFileToVFS('Amiri-Regular.ttf', window.AmiriFont);
+            doc.addFont('Amiri-Regular.ttf', 'Amiri', 'normal', 'Identity-H');
+            doc.setFont('Amiri');
+        }
+        
+        // إضافة ترويسة
+        const pageWidth = doc.internal.pageSize.width;
+        
+        // إضافة ترويسة الوزارة
+        doc.setFontSize(16);
+        doc.text("المملكة الأردنية الهاشمية", pageWidth / 2, 10, { 
+            align: 'center',
+            isInputRtl: true,
+            isOutputRtl: true
+        });
+        
+        doc.setFontSize(14);
+        doc.text("وزارة التربية والتعليم", pageWidth / 2, 15, { 
+            align: 'center',
+            isInputRtl: true,
+            isOutputRtl: true
+        });
+        
+        doc.text("مديرية التربية والتعليم لمنطقة الزرقاء الثانية", pageWidth / 2, 20, { 
+            align: 'center',
+            isInputRtl: true,
+            isOutputRtl: true
+        });
+        
+        doc.setFontSize(12);
+        doc.text("قسم شؤون الموظفين", pageWidth / 2, 25, { 
+            align: 'center',
+            isInputRtl: true,
+            isOutputRtl: true
+        });
+        
+        doc.text("النقل الداخلي", pageWidth / 2, 30, { 
+            align: 'center',
+            isInputRtl: true,
+            isOutputRtl: true
+        });
+        
+        // إضافة تاريخ الطباعة
+        const today = new Date().toISOString().slice(0,10);
+        doc.setFontSize(10);
+        doc.text(`تاريخ الطباعة: ${today}`, pageWidth / 2, 35, { 
+            align: 'center',
+            isInputRtl: true,
+            isOutputRtl: true
+        });
+        
+        // إنشاء الجدول
+        doc.autoTable({
+            html: '#transfersTable',
+            startY: 40,
+            theme: 'grid',
+            headStyles: { fillColor: [41, 128, 185], textColor: 255, font: doc.getFont().fontName },
+            styles: { 
+                halign: 'right', 
+                font: doc.getFont().fontName,
+                direction: 'rtl',
+                minCellWidth: 15,
+                fontSize: 8
+            },
+            margin: { top: 40 },
+            didParseCell: function(data) {
+                // تحسين عرض الخلايا للنصوص العربية
+                if (data.cell.raw) {
+                    data.cell.styles.direction = 'rtl';
+                }
+            },
+            // تعديل حجم الخلايا للتناسب مع الصفحة
+            columnStyles: {
+                0: {cellWidth: 8}, // الرقم
+                1: {cellWidth: 25}, // الاسم
+                2: {cellWidth: 15}, // المؤهل
+                3: {cellWidth: 20}, // التخصص
+                4: {cellWidth: 15}, // الرقم الوزاري
+                5: {cellWidth: 25}, // مكان العمل الحالي
+                6: {cellWidth: 15}, // الوظيفة
+                7: {cellWidth: 25}, // المدرسة المنقول إليها
+                8: {cellWidth: 15}, // الوظيفة
+                9: {cellWidth: 20}, // ملاحظات
+            }
+        });
+        
+        // حفظ الملف
+        const fileName = `سجل_النقل_${today}.pdf`;
+        doc.save(fileName);
+    }
+    
+    // دالة تحسين الطباعة
+    function printReport() {
+        // إضافة فئة للجسم لتطبيق أنماط الطباعة
+        document.body.classList.add('printing');
+        
+        // إضافة فئة للصفحة الأولى
+        document.body.classList.add('first-page');
+        
+        // إخفاء رسالة النجاح عند الطباعة
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            alert.classList.add('d-none');
+        });
+        
+        // تحديد اتجاه الطباعة بناءً على عدد الأعمدة (دائماً أفقي لهذا التقرير)
+        document.querySelector('style').textContent += '@page { size: landscape; }';
+        
+        // ضمان عدم وجود فراغات زائدة قبل الجدول
+        const tableContainer = document.querySelector('.table-container');
+        if (tableContainer) {
+            tableContainer.style.marginTop = '0';
+            tableContainer.style.paddingTop = '0';
+        }
+        
+        // تقليل المسافة بين الترويسة والجدول
+        const printHeader = document.querySelector('.print-header');
+        if (printHeader) {
+            printHeader.style.marginBottom = '10px';
+        }
+        
+        // تقليل حجم الخط في الترويسة لتوفير مساحة
+        const headerElements = document.querySelectorAll('.print-header h2, .print-header h3, .print-header h4, .print-header h5');
+        headerElements.forEach(el => {
+            el.style.margin = '2px 0';
+            el.style.padding = '0';
+            el.style.lineHeight = '1.2';
+        });
+        
+        // طباعة الصفحة
+        window.print();
+        
+        // إزالة فئة الطباعة وإعادة إظهار رسالة النجاح بعد الانتهاء
+        setTimeout(function() {
+            document.body.classList.remove('printing');
+            document.body.classList.remove('first-page');
+            alerts.forEach(alert => {
+                alert.classList.remove('d-none');
+            });
+            // إعادة الهوامش إلى وضعها الطبيعي
+            if (tableContainer) {
+                tableContainer.style.marginTop = '';
+                tableContainer.style.paddingTop = '';
+            }
+            if (printHeader) {
+                printHeader.style.marginBottom = '';
+            }
+            headerElements.forEach(el => {
+                el.style.margin = '';
+                el.style.padding = '';
+                el.style.lineHeight = '';
+            });
+        }, 1000);
+    }
+</script>
+{% endblock %}

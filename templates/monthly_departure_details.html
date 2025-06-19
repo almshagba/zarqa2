@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}تفاصيل ترحيل المغادرات - {{ month }}/{{ year }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">تفاصيل ترحيل المغادرات - {{ month }}/{{ year }}</h3>
+                    <div class="card-tools">
+                        <a href="{{ url_for('leave.process_monthly_departures') }}" class="btn btn-secondary">العودة</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if monthly_balances %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>اسم الموظف</th>
+                                    <th>ساعات منقولة</th>
+                                    <th>ساعات الشهر الحالي</th>
+                                    <th>إجمالي الساعات</th>
+                                    <th>الأيام المحولة</th>
+                                    <th>الساعات المتبقية</th>
+                                    <th>تاريخ المعالجة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for balance in monthly_balances %}
+                                <tr>
+                                    <td>{{ balance.employee.name }}</td>
+                                    <td>{{ "%.2f"|format(balance.carried_hours) }}</td>
+                                    <td>{{ "%.2f"|format(balance.total_hours) }}</td>
+                                    <td>{{ "%.2f"|format(balance.carried_hours + balance.total_hours) }}</td>
+                                    <td>{{ balance.converted_days }}</td>
+                                    <td>{{ "%.2f"|format(balance.remaining_hours) }}</td>
+                                    <td>{{ balance.processing_date.strftime('%Y-%m-%d %H:%M') if balance.processing_date else '-' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">لا توجد بيانات لهذا الشهر</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

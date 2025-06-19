@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}تفاصيل الإجازة العرضية لمدير مدرسة{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h3>تفاصيل الإجازة العرضية لمدير مدرسة</h3>
+            <div>
+                {% if current_user.has_permission('can_edit_leaves') %}
+                <a href="{{ url_for('principal_leaves.edit_principal_casual_leave', id=leave.id) }}" class="btn btn-light">
+                    <i class="fas fa-edit"></i> تعديل
+                </a>
+                {% endif %}
+                <a href="{{ url_for('principal_leaves.principal_casual_leaves_list') }}" class="btn btn-light">
+                    <i class="fas fa-arrow-left"></i> العودة
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>معلومات المدير</h4>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>الاسم</th>
+                            <td>{{ leave.employee.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>الرقم الوزاري</th>
+                            <td>{{ leave.employee.ministry_number }}</td>
+                        </tr>
+                        <tr>
+                            <th>رقم الهوية</th>
+                            <td>{{ leave.employee.civil_id }}</td>
+                        </tr>
+                        <tr>
+                            <th>المدرسة</th>
+                            <td>{{ leave.school.name }}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h4>معلومات الإجازة</h4>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>رقم كتاب المدرسة</th>
+                            <td>{{ leave.school_letter_number }}</td>
+                        </tr>
+                        <tr>
+                            <th>تاريخ كتاب المدرسة</th>
+                            <td>{{ leave.school_letter_date.strftime('%Y-%m-%d') }}</td>
+                        </tr>
+                        <tr>
+                            <th>تاريخ بداية الإجازة</th>
+                            <td>{{ leave.start_date.strftime('%Y-%m-%d') }}</td>
+                        </tr>
+                        <tr>
+                            <th>تاريخ نهاية الإجازة</th>
+                            <td>{{ leave.end_date.strftime('%Y-%m-%d') }}</td>
+                        </tr>
+                        <tr>
+                            <th>عدد أيام الإجازة</th>
+                            <td>{{ leave.days_count }} يوم</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <h4>سبب الإجازة</h4>
+                <div class="card">
+                    <div class="card-body">
+                        {{ leave.leave_reason|nl2br }}
+                    </div>
+                </div>
+            </div>
+            
+            {% if leave.notes %}
+            <div class="mt-4">
+                <h4>ملاحظات إضافية</h4>
+                <div class="card">
+                    <div class="card-body">
+                        {{ leave.notes|nl2br }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="mt-4">
+                <h4>معلومات النظام</h4>
+                <table class="table table-bordered">
+                    <tr>
+                        <th>تاريخ الإنشاء</th>
+                        <td>{{ leave.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    </tr>
+                    <tr>
+                        <th>آخر تحديث</th>
+                        <td>{{ leave.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="mt-4 d-flex justify-content-between">
+                <a href="{{ url_for('principal_leaves.principal_casual_leaves_list') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> العودة إلى القائمة
+                </a>
+                
+                <div>
+                    {% if current_user.has_permission('can_edit_leaves') %}
+                    <a href="{{ url_for('principal_leaves.edit_principal_casual_leave', id=leave.id) }}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> تعديل
+                    </a>
+                    {% endif %}
+                    
+                    {% if current_user.has_permission('can_delete_leaves') %}
+                    <form method="POST" action="{{ url_for('principal_leaves.delete_principal_casual_leave', id=leave.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-danger" onclick="return window.confirm('هل أنت متأكد من حذف هذه الإجازة العرضية؟')">
+                            <i class="fas fa-trash"></i> حذف
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+
+{% block title %}تعديل لجنة التحقيق{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="card-title">تعديل لجنة التحقيق</h3>
+                    <a href="{{ url_for('procedures.investigation_committees_list') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> العودة للقائمة
+                    </a>
+                </div>
+                
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <!-- المدرسة أو القسم -->
+                            <div class="col-md-6 mb-3">
+                                <label for="school_id" class="form-label">المدرسة أو القسم <span class="text-danger">*</span></label>
+                                <select class="form-select" id="school_id" name="school_id" required>
+                                    <option value="">اختر المدرسة أو القسم</option>
+                                    {% for school in schools %}
+                                        <option value="{{ school.id }}" {% if school.id == committee.school_id %}selected{% endif %}>
+                                            {{ school.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <!-- تاريخ تشكيل اللجنة -->
+                            <div class="col-md-6 mb-3">
+                                <label for="committee_date" class="form-label">تاريخ تشكيل اللجنة <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="committee_date" name="committee_date" 
+                                       value="{{ committee.committee_date.strftime('%Y-%m-%d') }}" required>
+                            </div>
+                        </div>
+                        
+                        <!-- البحث عن الموظفين -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h5 class="card-title">البحث عن موظفي المديرية</h5>
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <input type="text" class="form-control" id="search_term" placeholder="ابحث بالاسم أو الرقم الوزاري...">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <button type="button" class="btn btn-primary" id="search_employee_btn">
+                                                    <i class="fas fa-search"></i> بحث
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div id="search_result" class="mt-3"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <!-- رئيس اللجنة -->
+                            <div class="col-md-4 mb-3">
+                                <label for="committee_head_id" class="form-label">رئيس اللجنة (موظف مديرية) <span class="text-danger">*</span></label>
+                                <select class="form-select" id="committee_head_id" name="committee_head_id" required>
+                                    <option value="">اختر رئيس اللجنة</option>
+                                    {% for employee in employees %}
+                                        <option value="{{ employee.id }}" {% if employee.id == committee.committee_head_id %}selected{% endif %}>
+                                            {{ employee.name }} - {{ employee.ministry_number }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <!-- العضو الأول -->
+                            <div class="col-md-4 mb-3">
+                                <label for="first_member_id" class="form-label">العضو الأول (موظف مديرية) <span class="text-danger">*</span></label>
+                                <select class="form-select" id="first_member_id" name="first_member_id" required>
+                                    <option value="">اختر العضو الأول</option>
+                                    {% for employee in employees %}
+                                        <option value="{{ employee.id }}" {% if employee.id == committee.first_member_id %}selected{% endif %}>
+                                            {{ employee.name }} - {{ employee.ministry_number }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <!-- العضو الثاني -->
+                            <div class="col-md-4 mb-3">
+                                <label for="second_member_id" class="form-label">العضو الثاني (موظف مديرية) <span class="text-danger">*</span></label>
+                                <select class="form-select" id="second_member_id" name="second_member_id" required>
+                                    <option value="">اختر العضو الثاني</option>
+                                    {% for employee in employees %}
+                                        <option value="{{ employee.id }}" {% if employee.id == committee.second_member_id %}selected{% endif %}>
+                                            {{ employee.name }} - {{ employee.ministry_number }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <!-- رقم الكتاب -->
+                            <div class="col-md-4 mb-3">
+                                <label for="letter_number" class="form-label">رقم الكتاب</label>
+                                <input type="text" class="form-control" id="letter_number" name="letter_number" 
+                                       value="{{ committee.letter_number or '' }}" placeholder="رقم الكتاب">
+                            </div>
+                            
+                            <!-- تاريخ الكتاب -->
+                            <div class="col-md-4 mb-3">
+                                <label for="letter_date" class="form-label">تاريخ الكتاب</label>
+                                <input type="date" class="form-control" id="letter_date" name="letter_date" 
+                                       value="{{ committee.letter_date.strftime('%Y-%m-%d') if committee.letter_date else '' }}">
+                            </div>
+                            
+                            <!-- حالة اللجنة -->
+                            <div class="col-md-4 mb-3">
+                                <label for="status" class="form-label">حالة اللجنة</label>
+                                <select class="form-select" id="status" name="status">
+                                    <option value="نشطة" {% if committee.status == 'نشطة' %}selected{% endif %}>نشطة</option>
+                                    <option value="مكتملة" {% if committee.status == 'مكتملة' %}selected{% endif %}>مكتملة</option>
+                                    <option value="ملغاة" {% if committee.status == 'ملغاة' %}selected{% endif %}>ملغاة</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- مضمون الشكوى -->
+                        <div class="mb-3">
+                            <label for="complaint_content" class="form-label">مضمون الشكوى <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="complaint_content" name="complaint_content" rows="4" 
+                                      placeholder="اكتب مضمون الشكوى هنا..." required>{{ committee.complaint_content }}</textarea>
+                        </div>
+                        
+                        <!-- ملاحظات -->
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">ملاحظات إضافية</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                      placeholder="ملاحظات إضافية (اختياري)">{{ committee.notes or '' }}</textarea>
+                        </div>
+                        
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-save"></i> حفظ التعديلات
+                            </button>
+                            <a href="{{ url_for('procedures.investigation_committees_list') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> إلغاء
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.search-result {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: #f8f9fa;
+}
+
+.employee-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 5px;
+}
+
+.employee-item:last-child {
+    border-bottom: none;
+}
+
+.btn-select {
+    margin: 2px;
+    font-size: 12px;
+    padding: 2px 8px;
+}
+</style>
+
+<script>
+// البحث عن الموظفين
+document.addEventListener('DOMContentLoaded', function() {
+    const searchBtn = document.getElementById('search_employee_btn');
+    const searchInput = document.getElementById('search_term');
+    const searchResult = document.getElementById('search_result');
+    
+    // البحث عند الضغط على زر البحث
+    searchBtn.addEventListener('click', function() {
+        performSearch();
+    });
+    
+    // البحث عند الضغط على Enter
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            performSearch();
+        }
+    });
+    
+    function performSearch() {
+        const searchTerm = searchInput.value.trim();
+        
+        if (!searchTerm) {
+            searchResult.innerHTML = '<div class="alert alert-warning">يرجى إدخال كلمة البحث</div>';
+            return;
+        }
+        
+        // عرض رسالة التحميل
+        searchResult.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> جاري البحث...</div>';
+        
+        // إرسال طلب البحث
+        fetch(`/api/directorate_employee_search?search_term=${encodeURIComponent(searchTerm)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.employees.length === 1) {
+                        // نتيجة واحدة
+                        const employee = data.employees[0];
+                        searchResult.innerHTML = `
+                            <div class="alert alert-success">
+                                <strong>تم العثور على موظف واحد:</strong><br>
+                                <strong>الاسم:</strong> ${employee.name}<br>
+                                <strong>الرقم الوزاري:</strong> ${employee.ministry_number}<br>
+                                <strong>المنصب:</strong> ${employee.job_title}<br>
+                                <div class="mt-2">
+                                    <button type="button" class="btn btn-sm btn-primary btn-select" onclick="selectEmployee(${employee.id}, '${employee.name}', '${employee.ministry_number}', 'head')">اختيار كرئيس</button>
+                                    <button type="button" class="btn btn-sm btn-success btn-select" onclick="selectEmployee(${employee.id}, '${employee.name}', '${employee.ministry_number}', 'first')">اختيار كعضو أول</button>
+                                    <button type="button" class="btn btn-sm btn-info btn-select" onclick="selectEmployee(${employee.id}, '${employee.name}', '${employee.ministry_number}', 'second')">اختيار كعضو ثاني</button>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // عدة نتائج
+                        let html = '<div class="search-result"><h6>النتائج المطابقة:</h6>';
+                        data.employees.forEach(employee => {
+                            html += `
+                                <div class="employee-item">
+                                    <strong>${employee.name}</strong> - ${employee.ministry_number}<br>
+                                    <small class="text-muted">${employee.job_title}</small><br>
+                                    <div class="mt-1">
+                                        <button type="button" class="btn btn-sm btn-primary btn-select" onclick="selectEmployee(${employee.id}, '${employee.name}', '${employee.ministry_number}', 'head')">اختيار كرئيس</button>
+                                        <button type="button" class="btn btn-sm btn-success btn-select" onclick="selectEmployee(${employee.id}, '${employee.name}', '${employee.ministry_number}', 'first')">اختيار كعضو أول</button>
+                                        <button type="button" class="btn btn-sm btn-info btn-select" onclick="selectEmployee(${employee.id}, '${employee.name}', '${employee.ministry_number}', 'second')">اختيار كعضو ثاني</button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                        searchResult.innerHTML = html;
+                    }
+                } else {
+                    searchResult.innerHTML = `<div class="alert alert-warning">${data.message}</div>`;
+                }
+            })
+            .catch(error => {
+                console.error('خطأ في البحث:', error);
+                searchResult.innerHTML = '<div class="alert alert-danger">حدث خطأ أثناء البحث</div>';
+            });
+    }
+});
+
+// دالة اختيار الموظف
+function selectEmployee(employeeId, employeeName, ministryNumber, position) {
+    let targetSelect;
+    
+    if (position === 'head') {
+        targetSelect = document.getElementById('committee_head_id');
+    } else if (position === 'first') {
+        targetSelect = document.getElementById('first_member_id');
+    } else if (position === 'second') {
+        targetSelect = document.getElementById('second_member_id');
+    }
+    
+    if (targetSelect) {
+        // البحث عن الموظف في القائمة
+        let optionExists = false;
+        for (let option of targetSelect.options) {
+            if (option.value == employeeId) {
+                optionExists = true;
+                break;
+            }
+        }
+        
+        // إضافة الموظف إلى القائمة إذا لم يكن موجوداً
+        if (!optionExists) {
+            const newOption = new Option(`${employeeName} - ${ministryNumber}`, employeeId);
+            targetSelect.add(newOption);
+        }
+        
+        // اختيار الموظف
+        targetSelect.value = employeeId;
+        
+        // تشغيل حدث التغيير للتحقق من التكرار
+        targetSelect.dispatchEvent(new Event('change'));
+        
+        // عرض رسالة نجاح
+        document.getElementById('search_result').innerHTML = `
+            <div class="alert alert-success">
+                <i class="fas fa-check"></i> تم اختيار ${employeeName} بنجاح
+            </div>
+        `;
+    }
+}
+
+// التحقق من عدم تكرار الأعضاء
+document.addEventListener('DOMContentLoaded', function() {
+    const headSelect = document.getElementById('committee_head_id');
+    const firstMemberSelect = document.getElementById('first_member_id');
+    const secondMemberSelect = document.getElementById('second_member_id');
+    
+    function validateMembers() {
+        const headValue = headSelect.value;
+        const firstValue = firstMemberSelect.value;
+        const secondValue = secondMemberSelect.value;
+        
+        // إزالة التحديد السابق
+        [headSelect, firstMemberSelect, secondMemberSelect].forEach(select => {
+            select.classList.remove('is-invalid');
+        });
+        
+        // التحقق من التكرار
+        if (headValue && firstValue && headValue === firstValue) {
+            headSelect.classList.add('is-invalid');
+            firstMemberSelect.classList.add('is-invalid');
+        }
+        
+        if (headValue && secondValue && headValue === secondValue) {
+            headSelect.classList.add('is-invalid');
+            secondMemberSelect.classList.add('is-invalid');
+        }
+        
+        if (firstValue && secondValue && firstValue === secondValue) {
+            firstMemberSelect.classList.add('is-invalid');
+            secondMemberSelect.classList.add('is-invalid');
+        }
+    }
+    
+    headSelect.addEventListener('change', validateMembers);
+    firstMemberSelect.addEventListener('change', validateMembers);
+    secondMemberSelect.addEventListener('change', validateMembers);
+});
+</script>
+{% endblock %}

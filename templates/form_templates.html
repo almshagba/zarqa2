@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}نماذج قسم الشؤون الإدارية{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">نماذج قسم الشؤون الإدارية</h3>
+            <a href="{{ url_for('main.add_form_template') }}" class="btn btn-light">
+                <i class="fas fa-plus"></i> إضافة نموذج جديد
+            </a>
+        </div>
+        <div class="card-body">
+            {% if templates %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>اسم النموذج</th>
+                            <th>نوع الملف</th>
+                            <th>الوصف</th>
+                            <th>تاريخ الإضافة</th>
+                            <th>بواسطة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for template in templates %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ template.name }}</td>
+                            <td>
+                                {% if template.file_type == 'Word' %}
+                                <span class="badge bg-primary"><i class="fas fa-file-word"></i> Word</span>
+                                {% elif template.file_type == 'PDF' %}
+                                <span class="badge bg-danger"><i class="fas fa-file-pdf"></i> PDF</span>
+                                {% elif template.file_type == 'Image' %}
+                                <span class="badge bg-success"><i class="fas fa-file-image"></i> صورة</span>
+                                {% else %}
+                                <span class="badge bg-secondary"><i class="fas fa-file"></i> {{ template.file_type }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ template.description or '-' }}</td>
+                            <td>{{ template.upload_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>{{ template.user.full_name if template.user else '-' }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{{ url_for('main.download_form_template', id=template.id) }}" class="btn btn-sm btn-success">
+                                        <i class="fas fa-download"></i> تنزيل
+                                    </a>
+                                    {% if session.get('is_admin') or session.get('user_id') == template.user_id %}
+                                    <form action="{{ url_for('main.delete_form_template', id=template.id) }}" method="post" style="display:inline;" onsubmit="return window.confirm('هل أنت متأكد من حذف النموذج {{ template.name }}؟')">
+                                        <button type="submit" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i> حذف
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                                
+
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> لا توجد نماذج مضافة حتى الآن.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

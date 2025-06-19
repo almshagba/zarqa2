@@ -1,0 +1,6 @@
+@echo off
+echo Starting database migration...
+python simple_migration.py
+echo.
+echo Migration completed. Press any key to continue...
+pause

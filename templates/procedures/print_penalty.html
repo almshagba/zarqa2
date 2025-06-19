@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>طباعة العقوبة التأديبية</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 20px;
+            line-height: 1.6;
+            color: #000;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .header-text {
+            text-align: center;
+            margin-bottom: 7px;
+        }
+        
+        .header-text p {
+            margin: 2px 0;
+            font-size: 14px;
+        }
+        
+        .document-info {
+            position: absolute;
+            top: 120px;
+            right: 20px;
+            text-align: right;
+            font-size: 10px;
+        }
+        
+        .document-info p {
+            margin: 12px 0;
+            display: flex;
+            justify-content: flex-start;
+            text-align: right;
+        }
+        
+        .document-info p::after {
+            content: "  :...........................";
+            margin-right: 15px;
+            letter-spacing: 1px;
+        }
+        
+        .employee-info {
+            margin: 20px 0;
+            font-weight: bold;
+            font-size: 16px;
+            text-align: right;
+        }
+        
+        .title {
+            text-align: center;
+            margin: 40px 0;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .subject {
+            text-align: left;
+            margin: 0px 0;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .content {
+            text-align: right;
+            margin: 20px 0;
+            line-height: 2;
+        }
+        
+        .content p {
+            margin: 15px 0;
+            text-align: right;
+        }
+        
+        .respect {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .signature-section {
+            margin-top: 40px;
+            text-align: left;
+        }
+        
+        .copies {
+            margin-top: 160px;
+            text-align: right;
+            font-size: 12px;
+            font-weight: bold;
+
+        }
+        
+        .copies p {
+            margin: 5px 0;
+        }
+        
+        .print-button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .print-button:hover {
+            background: #0056b3;
+        }
+        
+        .export-button {
+            position: fixed;
+            top: 10px;
+            right: 120px;
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .export-button:hover {
+            background: #218838;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .edit-button {
+            position: fixed;
+            top: 10px;
+            right: 250px;
+            background: #ffc107;
+            color: #212529;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .edit-button:hover {
+            background: #e0a800;
+        }
+        
+        .editor-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .editor-content {
+            background-color: #fefefe;
+            margin: 2% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            height: 90%;
+            border-radius: 10px;
+            overflow-y: auto;
+        }
+        
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .editor-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .close-editor {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .close-editor:hover {
+            background: #c82333;
+        }
+        
+        .editor-form {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .editor-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .save-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .save-button:hover {
+            background: #218838;
+        }
+        
+        .preview-button {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .preview-button:hover {
+            background: #138496;
+        }
+        
+        @media print {
+            body {
+                margin: 0;
+                padding: 15px;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+    <script>
+        function convertToHindiNumerals() {
+            var hindiNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+            var walker = document.createTreeWalker(
+                document.body,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+            );
+            
+            var textNodes = [];
+            var node;
+            while (node = walker.nextNode()) {
+                textNodes.push(node);
+            }
+            
+            textNodes.forEach(function(textNode) {
+                var text = textNode.textContent;
+                var convertedText = text.replace(/[0-9]/g, function(digit) {
+                    return hindiNumerals[parseInt(digit)];
+                });
+                textNode.textContent = convertedText;
+            });
+        }
+        
+        window.addEventListener('load', convertToHindiNumerals);
+    </script>
+</head>
+<body>
+    <button class="print-button no-print" onclick="window.print()">طباعة</button>
+    <a href="{{ url_for('procedures.export_penalty_word_formatted', penalty_id=penalty.id) }}" class="export-button no-print">تصدير Word</a>
+    <button class="edit-button no-print" onclick="openEditor()">تحرير الكتاب</button>
+    
+    <!-- Document info at top right -->
+    <div class="header">
+        <div class="header-text">
+            <p>المملكة الأردنية الهاشمية</p>
+            <img src="{{ url_for('static', filename='images/jordan_coat_of_arms.png') }}" alt="شعار المملكة الأردنية الهاشمية" style="height: 80px; margin: 5px 0;">
+            <p>مديرية التربية والتعليم لمنطقة الزرقاء الثانية</p>
+        </div>
+    </div>
+    <div class="document-info">
+        <p>  الرقم    </p>
+        <p>  التاريخ  </p>
+        <p>  الموافق  </p>
+    </div>
+    <div class="title">
+        <p>معالي وزير التربية والتعليم المحترم</p>
+    </div>
+    
+    <!-- Title centered -->
+    
+    
+    <!-- Subject on the left -->
+    <div class="subject">
+        <p>الموضوع: الإجراءات والعقوبات التأديبية</p>
+        <p style="text-align: left; margin-top: 10px;">
+            {% set job_title = penalty.employee.job_title %}
+            {% set employee_gender = penalty.employee.gender %}
+            
+            {% if job_title == "مدير المدرسة" %}
+                {% if employee_gender == 'أنثى' or employee_gender == 'انثى' %}
+                    مديرة المدرسة
+                {% else %}
+                    مدير المدرسة
+                {% endif %}
+            {% elif job_title == "مساعد مدير المدرسة" %}
+                {% if employee_gender == 'أنثى' or employee_gender == 'انثى' %}
+                    مساعدة مديرة المدرسة
+                {% else %}
+                    مساعد مدير المدرسة
+                {% endif %}
+            {% elif job_title == "امين اللوازم المدرسية" %}
+                {% if employee_gender == 'أنثى' or employee_gender == 'انثى' %}
+                    امينة اللوازم المدرسية
+                {% else %}
+                    امين اللوازم المدرسية
+                {% endif %}
+            {% elif job_title == "امين المكتبة" %}
+                {% if employee_gender == 'أنثى' or employee_gender == 'انثى' %}
+                    امينة المكتبة
+                {% else %}
+                    امين المكتبة
+                {% endif %}
+            {% elif job_title == "قيم مختبر حاسوب" %}
+                {% if employee_gender == 'أنثى' or employee_gender == 'انثى' %}
+                    قيمة مختبر الحاسوب
+                {% else %}
+                    قيم مختبر حاسوب
+                {% endif %}
+            {% elif job_title == "معلم" %}
+                {% if employee_gender == 'أنثى' or employee_gender == 'انثى' %}
+                    المعلمة
+                {% else %}
+                    المعلم
+                {% endif %}
+            {% elif job_title == "مبرمج مساعد" %}
+                {% if employee_gender == 'أنثى' or employee_gender == 'انثى' %}
+                    المبرمجة المساعدة
+                {% else %}
+                    المبرمج المساعد
+                {% endif %}
+            {% elif job_title == "مدير" %}
+                {% if employee_gender == 'أنثى' or employee_gender == 'انثى' %}
+                    المديرة
+                {% else %}
+                    المدير
+                {% endif %}
+            {% elif job_title == "نائب مدير" %}
+                {% if employee_gender == 'أنثى' or employee_gender == 'انثى' %}
+                    نائبة المدير
+                {% else %}
+                    نائب المدير
+                {% endif %}
+            {% elif job_title == "رئيس قسم" %}
+                {% if employee_gender == 'أنثى' or employee_gender == 'انثى' %}
+                    رئيسة القسم
+                {% else %}
+                    رئيس القسم
+                {% endif %}
+            {% else %}
+                {% if employee_gender == 'أنثى' or employee_gender == 'انثى' %}
+                    {% if job_title.startswith('ال') %}
+                        {{ job_title }}ة
+                    {% else %}
+                        ال{{ job_title }}ة
+                    {% endif %}
+                {% else %}
+                    {% if job_title.startswith('ال') %}
+                        {{ job_title }}
+                    {% else %}
+                        ال{{ job_title }}
+                    {% endif %}
+                {% endif %}
+            {% endif %}/{{ penalty.employee.name }} ({{ penalty.employee.ministry_number }})
+        </p>
+    </div>
+    
+    <div class="content">
+        <p>السلام عليكم ورحمة الله وبركاته</p>
+        
+        <p>أرفق طيه عقوبة {{ penalty.penalty_type }} الصادرة بحق {% if penalty.employee.gender == 'أنثى' or penalty.employee.gender == 'انثى' %}المذكورة اعلاه{% else %}المذكور اعلاه{% endif %} بناءً على كتاب {% if penalty.employee.gender == 'أنثى' or penalty.employee.gender == 'انثى' %}مديرة مدرستها{% else %}مدير مدرسته{% endif %} رقم ({{ penalty.letter_number }}) تاريخ {{ penalty.letter_date.strftime('%Y/%m/%d') }}م.</p>
+    </div>
+    
+    <!-- Respect centered -->
+    <div class="respect">
+        <p>واقبلوا الاحترام</p>
+    </div>
+    
+    <div class="signature-section">
+        <p style="text-align: left; margin-top: 30px; font-size: 16px; font-weight: bold; margin-bottom: 5px;">
+            مدير التربية والتعليم
+        </p>
+    </div>
+    
+    <div class="copies">
+        <p>نسخة/ معالي رئيس ديوان المحاسبة المحترم</p>
+        <p>نسخة/عطوفة رئيس مجلس هيئة الخدمة والادارة العامة المحترم</p>
+        <p>نسخة / رئيس قسم التحقيقات والاجراءات /الوزارة</p>
+    </p>مع نسخة من اوراق التحقيق</p>
+        <p>نسخة مدير الشؤون الإدارية والمالية</p>
+        <p>نسخة / رئيس قسم شؤون الموظفين</p>
+        <p>نسخة / ملف الشخصي / مع المرفقات</p>
+        <p>نسخة / ل{% if penalty.employee.is_directorate_employee %}قسم {{ penalty.employee.department }}{% else %}مدرسة {{ penalty.school.name }}{% endif %}</p>
+        <p>نسخة / الديوان</p>
+    </div>
+    
+    <!-- محرر الكتاب -->
+    <div id="editorModal" class="editor-modal no-print">
+        <div class="editor-content">
+            <div class="editor-header">
+                <div class="editor-title">تحرير محتوى الكتاب</div>
+                <button class="close-editor" onclick="closeEditor()">&times;</button>
+            </div>
+            
+            <form class="editor-form" id="editorForm">
+                <div class="form-group">
+                    <label for="documentNumber">الرقم:</label>
+                    <input type="text" id="documentNumber" name="documentNumber" placeholder="أدخل رقم الكتاب">
+                </div>
+                
+                <div class="form-group">
+                    <label for="documentDate">التاريخ:</label>
+                    <input type="text" id="documentDate" name="documentDate" placeholder="أدخل تاريخ الكتاب">
+                </div>
+                
+                <div class="form-group">
+                    <label for="correspondingDate">الموافق:</label>
+                    <input type="text" id="correspondingDate" name="correspondingDate" placeholder="أدخل التاريخ الموافق">
+                </div>
+                
+                <div class="form-group">
+                    <label for="recipientTitle">المرسل إليه:</label>
+                    <input type="text" id="recipientTitle" name="recipientTitle" value="معالي وزير التربية والتعليم المحترم">
+                </div>
+                
+                <div class="form-group">
+                    <label for="subjectText">الموضوع:</label>
+                    <input type="text" id="subjectText" name="subjectText" value="الإجراءات والعقوبات التأديبية">
+                </div>
+                
+                <div class="form-group">
+                    <label for="employeeInfo">معلومات الموظف:</label>
+                    <input type="text" id="employeeInfo" name="employeeInfo" value="{% set job_title = penalty.employee.job_title %}{% set employee_gender = penalty.employee.gender %}{% if job_title == 'مدير المدرسة' %}{% if employee_gender == 'أنثى' or employee_gender == 'انثى' %}مديرة المدرسة{% else %}مدير المدرسة{% endif %}{% elif job_title == 'مساعد مدير المدرسة' %}{% if employee_gender == 'أنثى' or employee_gender == 'انثى' %}مساعدة مديرة المدرسة{% else %}مساعد مدير المدرسة{% endif %}{% elif job_title == 'امين اللوازم المدرسية' %}{% if employee_gender == 'أنثى' or employee_gender == 'انثى' %}امينة اللوازم المدرسية{% else %}امين اللوازم المدرسية{% endif %}{% elif job_title == 'امين المكتبة' %}{% if employee_gender == 'أنثى' or employee_gender == 'انثى' %}امينة المكتبة{% else %}امين المكتبة{% endif %}{% elif job_title == 'قيم مختبر حاسوب' %}{% if employee_gender == 'أنثى' or employee_gender == 'انثى' %}قيمة مختبر الحاسوب{% else %}قيم مختبر حاسوب{% endif %}{% elif job_title == 'معلم' %}{% if employee_gender == 'أنثى' or employee_gender == 'انثى' %}المعلمة{% else %}المعلم{% endif %}{% elif job_title == 'مبرمج مساعد' %}{% if employee_gender == 'أنثى' or employee_gender == 'انثى' %}المبرمجة المساعدة{% else %}المبرمج المساعد{% endif %}{% elif job_title == 'مدير' %}{% if employee_gender == 'أنثى' or employee_gender == 'انثى' %}المديرة{% else %}المدير{% endif %}{% elif job_title == 'نائب مدير' %}{% if employee_gender == 'أنثى' or employee_gender == 'انثى' %}نائبة المدير{% else %}نائب المدير{% endif %}{% elif job_title == 'رئيس قسم' %}{% if employee_gender == 'أنثى' or employee_gender == 'انثى' %}رئيسة القسم{% else %}رئيس القسم{% endif %}{% else %}{% if employee_gender == 'أنثى' or employee_gender == 'انثى' %}{% if job_title.startswith('ال') %}{{ job_title }}ة{% else %}ال{{ job_title }}ة{% endif %}{% else %}{% if job_title.startswith('ال') %}{{ job_title }}{% else %}ال{{ job_title }}{% endif %}{% endif %}{% endif %}/{{ penalty.employee.name }} ({{ penalty.employee.ministry_number }})">
+                </div>
+                
+                <div class="form-group">
+                    <label for="greetingText">التحية:</label>
+                    <input type="text" id="greetingText" name="greetingText" value="السلام عليكم ورحمة الله وبركاته">
+                </div>
+                
+                <div class="form-group">
+                    <label for="mainContent">المحتوى الرئيسي:</label>
+                    <textarea id="mainContent" name="mainContent" rows="4">أرفق طيه عقوبة {{ penalty.penalty_type }} الصادرة بحق {% if penalty.employee.gender == 'أنثى' or penalty.employee.gender == 'انثى' %}المذكورة اعلاه{% else %}المذكور اعلاه{% endif %} بناءً على كتاب {% if penalty.employee.gender == 'أنثى' or penalty.employee.gender == 'انثى' %}مديرة مدرستها{% else %}مدير مدرسته{% endif %} رقم ({{ penalty.letter_number }}) تاريخ {{ penalty.letter_date.strftime('%Y/%m/%d') }}م.</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="respectText">الاحترام:</label>
+                    <input type="text" id="respectText" name="respectText" value="واقبلوا الاحترام">
+                </div>
+                
+                <div class="form-group">
+                    <label for="signatureText">التوقيع:</label>
+                    <input type="text" id="signatureText" name="signatureText" value="مدير التربية والتعليم">
+                </div>
+                
+                <div class="form-group">
+                    <label for="copiesText">النسخ:</label>
+                    <textarea id="copiesText" name="copiesText" rows="8">نسخة/ معالي رئيس ديوان المحاسبة المحترم
+نسخة/عطوفة رئيس مجلس هيئة الخدمة والادارة العامة المحترم
+نسخة / رئيس قسم التحقيقات والاجراءات /الوزارة
+مع نسخة من اوراق التحقيق
+نسخة مدير الشؤون الإدارية والمالية
+نسخة / رئيس قسم شؤون الموظفين
+نسخة / ملف الشخصي / مع المرفقات
+نسخة / ل{% if penalty.employee.is_directorate_employee %}قسم {{ penalty.employee.department }}{% else %}مدرسة {{ penalty.school.name }}{% endif %}
+نسخة / الديوان</textarea>
+                </div>
+                
+                <div class="editor-actions">
+                    <button type="button" class="preview-button" onclick="previewChanges()">معاينة التغييرات</button>
+                    <button type="button" class="save-button" onclick="applyChanges()">تطبيق التغييرات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        function openEditor() {
+            document.getElementById('editorModal').style.display = 'block';
+        }
+        
+        function closeEditor() {
+            document.getElementById('editorModal').style.display = 'none';
+        }
+        
+        function previewChanges() {
+            // تطبيق التغييرات مؤقتاً للمعاينة
+            applyChangesToDocument();
+            closeEditor();
+        }
+        
+        function applyChanges() {
+            // تطبيق التغييرات نهائياً
+            applyChangesToDocument();
+            closeEditor();
+            alert('تم تطبيق التغييرات بنجاح!');
+        }
+        
+        function applyChangesToDocument() {
+            // تحديث معلومات المستند
+            const docInfoPs = document.querySelectorAll('.document-info p');
+            if (docInfoPs.length >= 3) {
+                const docNumber = document.getElementById('documentNumber').value;
+                const docDate = document.getElementById('documentDate').value;
+                const corrDate = document.getElementById('correspondingDate').value;
+                
+                if (docNumber) docInfoPs[0].innerHTML = `الرقم: ${docNumber}`;
+                if (docDate) docInfoPs[1].innerHTML = `التاريخ: ${docDate}`;
+                if (corrDate) docInfoPs[2].innerHTML = `الموافق: ${corrDate}`;
+            }
+            
+            // تحديث العنوان
+            const titleElement = document.querySelector('.title p');
+            if (titleElement) {
+                const recipientTitle = document.getElementById('recipientTitle').value;
+                if (recipientTitle) titleElement.textContent = recipientTitle;
+            }
+            
+            // تحديث الموضوع
+            const subjectElement = document.querySelector('.subject p');
+            if (subjectElement) {
+                const subjectText = document.getElementById('subjectText').value;
+                if (subjectText) subjectElement.textContent = `الموضوع: ${subjectText}`;
+            }
+            
+            // تحديث معلومات الموظف
+            const employeeElement = document.querySelector('.subject p:last-child');
+            if (employeeElement) {
+                const employeeInfo = document.getElementById('employeeInfo').value;
+                if (employeeInfo) employeeElement.textContent = employeeInfo;
+            }
+            
+            // تحديث المحتوى
+            const contentPs = document.querySelectorAll('.content p');
+            if (contentPs.length >= 2) {
+                const greetingText = document.getElementById('greetingText').value;
+                const mainContent = document.getElementById('mainContent').value;
+                
+                if (greetingText) contentPs[0].textContent = greetingText;
+                if (mainContent) contentPs[1].textContent = mainContent;
+            }
+            
+            // تحديث الاحترام
+            const respectElement = document.querySelector('.respect p');
+            if (respectElement) {
+                const respectText = document.getElementById('respectText').value;
+                if (respectText) respectElement.textContent = respectText;
+            }
+            
+            // تحديث التوقيع
+            const signatureElement = document.querySelector('.signature-section p');
+            if (signatureElement) {
+                const signatureText = document.getElementById('signatureText').value;
+                if (signatureText) signatureElement.textContent = signatureText;
+            }
+            
+            // تحديث النسخ
+            const copiesElement = document.querySelector('.copies');
+            if (copiesElement) {
+                const copiesText = document.getElementById('copiesText').value;
+                if (copiesText) {
+                    copiesElement.innerHTML = copiesText.split('\n').map(line => `<p>${line}</p>`).join('');
+                }
+            }
+        }
+        
+        // إغلاق المحرر عند النقر خارجه
+        window.onclick = function(event) {
+            const modal = document.getElementById('editorModal');
+            if (event.target == modal) {
+                closeEditor();
+            }
+        }
+    </script>
+</body>
+</html>

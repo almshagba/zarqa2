@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+
+{% block title %}موظفي المديرية{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>موظفي المديرية</h2>
+    <div>
+        {% if current_user.has_permission('can_add_employees') or current_user.has_permission('can_add_new_employee') %}
+        <a href="{{ url_for('employee.add_directorate_employee') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> إضافة موظف
+        </a>
+        {% endif %}
+        
+        {% if current_user.has_permission('can_export_employees') %}
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exportModal">
+            <i class="fas fa-file-export"></i> تصدير
+        </button>
+        {% endif %}
+        
+        {% if current_user.has_permission('can_manage_employees') %}
+        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#importModal">
+            <i class="fas fa-file-import"></i> استيراد موظفين
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal تصدير -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exportModalLabel">تصدير بيانات الموظفين</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>اختر تنسيق التصدير:</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{{ url_for('export.export_directorate_employees', format='excel') }}" class="btn btn-success">
+                        <i class="fas fa-file-excel"></i> Excel
+                    </a>
+                    <a href="{{ url_for('export.export_directorate_employees', format='csv') }}" class="btn btn-primary">
+                        <i class="fas fa-file-csv"></i> CSV
+                    </a>
+                    <a href="{{ url_for('export.export_directorate_employees', format='pdf') }}" class="btn btn-danger">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal استيراد -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importModalLabel">استيراد بيانات الموظفين</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info mb-4">
+                    <h6 class="alert-heading">تعليمات الاستيراد:</h6>
+                    <ul class="mb-0">
+                        <li>الحقول المطلوبة:
+                            <ul>
+                                <li>الرقم الوزاري</li>
+                                <li>الاسم</li>
+                                <li>الرقم المدني</li>
+                                <li>الوظيفة</li>
+                                <li>اسم القسم (يجب أن يكون من أقسام المديرية)</li>
+                            </ul>
+                        </li>
+                        <li>تم تحسين نظام المطابقة ليتعامل مع:
+                            <ul>
+                                <li>المسافات الزائدة في أسماء الأقسام</li>
+                                <li>اختلافات بسيطة في كتابة أسماء الأقسام</li>
+                                <li>وجود أو عدم وجود "ال" التعريف</li>
+                            </ul>
+                        </li>
+                        <li>تنسيقات التاريخ المدعومة:
+                            <ul>
+                                <li>YYYY-MM-DD (مثل 2023-01-15)</li>
+                                <li>DD/MM/YYYY (مثل 15/01/2023)</li>
+                                <li>DD-MM-YYYY (مثل 15-01-2023)</li>
+                                <li>يدعم النظام أيضاً الأرقام العربية</li>
+                            </ul>
+                        </li>
+                        <li>الحد الأقصى لحجم الملف: 5 ميجابايت</li>
+                    </ul>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">تحميل نموذج الاستيراد</h6>
+                        <p>قم بتحميل نموذج الاستيراد وتعبئته بالبيانات المطلوبة</p>
+                        <a href="{{ url_for('main.download_import_template', is_directorate='true') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-download"></i> تحميل النموذج
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-primary">رفع ملف البيانات</h6>
+                        <form action="{{ url_for('main.import_employees_data') }}" method="post" enctype="multipart/form-data" id="importForm">
+                            <div class="mb-3">
+                                <label for="importFile" class="form-label">اختر ملف Excel أو CSV</label>
+                                <input type="file" class="form-control" id="importFile" name="importFile" accept=".xlsx,.xls,.csv" required>
+                                <div class="form-text">الملفات المدعومة: .xlsx, .xls, .csv</div>
+                            </div>
+                            <input type="hidden" name="is_directorate" value="true">
+                            <button type="submit" class="btn btn-primary" id="importBtn">
+                                <i class="fas fa-upload"></i> استيراد البيانات
+                            </button>
+                            <button class="btn btn-primary d-none" type="button" id="loadingBtn" disabled>
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                جاري الاستيراد...
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- عرض نتائج الاستيراد -->
+                {% if session.get('import_results') %}
+                <div class="mt-4">
+                    <h6 class="text-primary">نتائج الاستيراد</h6>
+                    <div class="alert {% if session.get('import_results').errors %}alert-warning{% else %}alert-success{% endif %}">
+                        <p><strong>ملخص:</strong></p>
+                        <p>تم إضافة: {{ session.get('import_results').added }} موظف</p>
+                        <p>تم تحديث: {{ session.get('import_results').updated }} موظف</p>
+                        <p>تم تخطي: {{ session.get('import_results').skipped }} موظف</p>
+                        {% if session.get('import_results').errors %}
+                        <div class="mt-2">
+                            <strong>الأخطاء:</strong>
+                            <ul class="text-danger">
+                                {% for error in session.get('import_results').errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- فلترة وبحث -->
+<div class="card mb-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">بحث وفلترة</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" action="{{ url_for('employee.directorate_employees') }}">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="search" class="form-label">بحث</label>
+                    <input type="text" class="form-control" id="search" name="search" placeholder="اسم الموظف، الرقم الوزاري، الرقم الوطني" value="{{ search_term }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="school" class="form-label">القسم</label>
+                    <select class="form-select" id="school" name="school">
+                        <option value="">جميع الأقسام</option>
+                        {% for school in schools %}
+                        <option value="{{ school.id }}" {% if selected_school == school.id|string %}selected{% endif %}>{{ school.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="job" class="form-label">الوظيفة</label>
+                    <select class="form-select" id="job" name="job">
+                        <option value="">جميع الوظائف</option>
+                        {% for job_title in job_titles %}
+                        <option value="{{ job_title }}" {% if selected_job == job_title %}selected{% endif %}>{{ job_title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">بحث</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- جدول الموظفين -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>الرقم الوزاري</th>
+                        <th>الاسم</th>
+                        <th>الرقم الوطني</th>
+                        <th>الوظيفة</th>
+                        <th>القسم</th>
+                        <th>رقم الهاتف</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in employees %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ employee.ministry_number }}</td>
+                        <td>{{ employee.name }}</td>
+                        <td>{{ employee.civil_id }}</td>
+                        <td>{{ employee.job_title }}</td>
+                        <td>{{ employee.school.name }}</td>
+                        <td>{{ employee.phone_number or '-' }}</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('employee.view_directorate_employee', id=employee.id) }}" class="btn btn-sm btn-info" title="عرض">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if current_user.has_permission('can_edit_employees') or current_user.has_permission('can_edit_employees_data') %}
+                                <a href="{{ url_for('employee.edit_directorate_employee', id=employee.id) }}" class="btn btn-sm btn-warning" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% endif %}
+                                {% if current_user.has_permission('can_delete_employees') or current_user.has_permission('can_delete_employee') %}
+                                <form method="POST" action="{{ url_for('employee.delete_directorate_employee', id=employee.id) }}" style="display:inline;" onsubmit="return window.confirm('هل أنت متأكد من حذف هذا الموظف؟')">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="حذف">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center">لا يوجد موظفين مديرية مسجلين</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/import.js') }}"></script>
+{% if session.get('import_results') and (session.get('import_results').added > 0 or session.get('import_results').updated > 0 or session.get('import_results').skipped > 0 or session.get('import_results').errors) %}
+<div data-import-results="true" style="display: none;"></div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("Import results detected in session");
+    if (typeof showImportModal === 'function') {
+        showImportModal();
+    } else {
+        console.error("showImportModal function not found");
+        // Fallback method
+        var importModal = document.getElementById('importModal');
+        if (importModal && typeof bootstrap !== 'undefined') {
+            var modal = new bootstrap.Modal(importModal);
+            modal.show();
+        }
+    }
+    
+    // Add event listener to clear session data when modal is closed
+    var importModal = document.getElementById('importModal');
+    if (importModal) {
+        importModal.addEventListener('hidden.bs.modal', function() {
+            // Send a request to clear the session data
+            fetch('/clear_import_results', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(function(response) {
+                console.log("Import results cleared from session");
+            }).catch(function(error) {
+                console.error("Failed to clear import results:", error);
+            });
+        });
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

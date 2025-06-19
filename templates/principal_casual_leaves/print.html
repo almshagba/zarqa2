@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>طباعة الإجازة العرضية لمدير المدرسة</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #000;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .header-text {
+            text-align: center;
+            margin-bottom: 7px;
+        }
+        
+        .header-text p {
+            margin: 2px 0;
+            font-size: 14px;
+        }
+        
+        .document-info {
+            position: absolute;
+            top: 120px;
+            right: 20px;
+            text-align: right;
+            font-size: 10px;
+        }
+        
+        .document-info p {
+            margin: 12px 0;
+            display: flex;
+            justify-content: flex-start;
+            text-align: right;
+        }
+        
+        .document-info p::after {
+            content: "...........................";
+            margin-right: 15px;
+            letter-spacing: 1px;
+        }
+        
+        .employee-info {
+            margin: 20px 0;
+            font-weight: bold;
+            font-size: 16px;
+            text-align: right;
+        }
+        
+        .title {
+            text-align: center;
+            margin: 40px 0;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .subject {
+            text-align: left;
+            margin: 0px 0;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .content {
+            text-align: right;
+            margin: 20px 0;
+            line-height: 2;
+        }
+        
+        .content p {
+            margin: 15px 0;
+            text-align: right;
+        }
+        
+        .respect {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .signature-section {
+            margin-top: 40px;
+            text-align: left;
+        }
+        
+        .copies {
+            margin-top: 60px;
+            text-align: right;
+        }
+        
+        .copies p {
+            margin: 5px 0;
+        }
+        
+        .print-button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .print-button:hover {
+            background: #0056b3;
+        }
+        
+        .edit-button {
+            position: fixed;
+            top: 10px;
+            right: 120px;
+            background: #ffc107;
+            color: #212529;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .edit-button:hover {
+            background: #e0a800;
+        }
+        
+        .editor-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .editor-content {
+            background-color: #fefefe;
+            margin: 2% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            height: 90%;
+            border-radius: 10px;
+            overflow-y: auto;
+        }
+        
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .editor-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .close-editor {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .close-editor:hover {
+            background: #c82333;
+        }
+        
+        .editor-form {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .editor-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .save-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .save-button:hover {
+            background: #218838;
+        }
+        
+        .preview-button {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .preview-button:hover {
+            background: #138496;
+        }
+        
+        @media print {
+            body {
+                margin: 0;
+                padding: 15px;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+    <script>
+        function convertToHindiNumerals() {
+            var hindiNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+            var walker = document.createTreeWalker(
+                document.body,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+            );
+            
+            var textNodes = [];
+            var node;
+            while (node = walker.nextNode()) {
+                textNodes.push(node);
+            }
+            
+            textNodes.forEach(function(textNode) {
+                var text = textNode.textContent;
+                var convertedText = text.replace(/[0-9]/g, function(digit) {
+                    return hindiNumerals[parseInt(digit)];
+                });
+                textNode.textContent = convertedText;
+            });
+        }
+        
+        window.addEventListener('load', convertToHindiNumerals);
+    </script>
+</head>
+<body>
+    <button class="print-button no-print" onclick="window.print()">طباعة</button>
+    <button class="edit-button no-print" onclick="openEditor()">تحرير الكتاب</button>
+    
+    <!-- Document info at top right -->
+    <div class="header">
+        <div class="header-text">
+            <p>المملكة الأردنية الهاشمية</p>
+            <img src="{{ url_for('static', filename='images/jordan_coat_of_arms.png') }}" alt="شعار المملكة الأردنية الهاشمية" style="height: 80px; margin: 5px 0;">
+            <p>مديرية التربية والتعليم لمنطقة الزرقاء الثانية</p>
+        </div>
+    </div>
+    <div class="document-info">
+        <p>الرقم </p>
+        <p>التاريخ</p>
+        <p>الموافق</p>
+    </div>
+    <div class="title">
+        {% if leave.employee.is_directorate_employee %}
+            {% if leave.employee.job_title == 'رئيس قسم' %}
+                <p>{% if leave.employee.gender == 'أنثى' or leave.employee.gender == 'انثى' %}السيدة{% else %}السيد{% endif %}/ {{ leave.employee.name }} ({{ leave.employee.ministry_number }})</p>
+                <p>{% if leave.employee.gender == 'أنثى' or leave.employee.gender == 'انثى' %}رئيسة قسم{% else %}رئيس قسم{% endif %} {{ leave.employee.department }}</p>
+            {% else %}
+                <p>{% if leave.employee.gender == 'أنثى' or leave.employee.gender == 'انثى' %}السيدة{% else %}السيد{% endif %}/ {{ leave.employee.name }} ({{ leave.employee.ministry_number }})</p>
+                <p>{% if leave.employee.gender == 'أنثى' or leave.employee.gender == 'انثى' %}ال{{ leave.employee.job_title }}ة{% else %}ال{{ leave.employee.job_title }}{% endif %}</p>
+                <p>بوساطة {% if leave.employee.department_head_gender == 'أنثى' %}رئيسة{% else %}رئيس{% endif %} قسم {{ leave.employee.department }}</p>
+            {% endif %}
+        {% else %}
+            <p>{% if leave.employee.gender == 'أنثى' or leave.employee.gender == 'انثى' %}السيدة{% else %}السيد{% endif %}/ {{ leave.employee.name }} ({{ leave.employee.ministry_number }})</p>
+            <p>{% if leave.school.gender == 'إناث' %}مديرة المدرسة{% else %}مدير المدرسة{% endif %} {{ leave.school.name }} </p>
+        {% endif %}
+    </div>
+    
+    <!-- Title centered -->
+    
+    
+    <!-- Subject on the left -->
+    <div class="subject">
+        {% if 'أبوة' in leave.leave_reason %}
+        <p>الموضوع : إجازة الأبوة<br>
+        ( الفئة الأولى والثانية والثالثة )</p>
+        {% else %}
+        <p>الموضوع : الإجازات العرضية براتب كامل مع العلاوات<br>
+        ( الفئة الأولى والثانية والثالثة )</p>
+        {% endif %}
+    </div>
+    
+    <div class="content">
+        <p>السلام عليكم ورحمة الله وبركاته</p>
+        
+        {% if 'أبوة' not in leave.leave_reason %}
+        <p>إشارة لكتابكم رقم ({{ leave.school_letter_number }}) تاريخ {{ leave.school_letter_date.strftime('%Y/%m/%d') }}م</p>
+        {% endif %}
+        
+        {% if 'وفاة الزوجة' in leave.leave_reason %}
+        <p>واستناداً لأحكام المادة رقم (53/ ب) من نظام إدارة الموارد البشرية في القطاع العام رقم (33) لسنة 2024م، والصلاحيات المفوضة الي بموجب كتاب عطوفة الأمين العام للشؤون الإدارية والمالية رقم (13669/1/70) تاريخ 16/3/2025م.</p>
+        {% elif 'عرضية' in leave.leave_reason %}
+        <p>واستناداً لأحكام المادة رقم (53/ ج) من نظام إدارة الموارد البشرية في القطاع العام رقم (33) لسنة 2024م.</p>
+        {% elif 'أبوة' in leave.leave_reason %}
+        <p>واستناداً لأحكام المادة رقم (52) من نظام إدارة الموارد البشرية في القطاع العام رقم (33) لسنة 2024م، والصلاحيات المفوضة الي بموجب كتاب عطوفة الأمين العام للشؤون الإدارية والمالية رقم (13669/1/70) تاريخ 16/3/2025م.</p>
+        {% else %}
+        <p>واستناداً لأحكام المادة رقم (53/ أ) من نظام إدارة الموارد البشرية في القطاع العام رقم (33) لسنة 2024م، والصلاحيات المفوضة الي بموجب كتاب عطوفة الأمين العام للشؤون الإدارية والمالية رقم (13669/1/70) تاريخ 16/3/2025م.</p>
+        {% endif %}
+        
+        {% if 'أبوة' in leave.leave_reason %}
+        <p>قررت اعتبار تغيبك عن العمل يوم {{ leave.start_date.strftime('%Y/%m/%d') }}م
+        {% if leave.days_count > 1 %}
+        إلى يوم {{ leave.end_date.strftime('%Y/%m/%d') }}م
+        {% endif %}
+        إجازة أبوة.</p>
+        {% else %}
+        <p>قررت اعتبار تغيبك عن العمل يوم {{ leave.start_date.strftime('%Y/%m/%d') }}م
+        {% if leave.days_count > 1 %}
+        إلى يوم {{ leave.end_date.strftime('%Y/%m/%d') }}م
+        {% endif %}
+        إجازة عرضية براتب كامل مع العلاوات.</p>
+        {% endif %}
+        
+        {% if 'عرضية' not in leave.leave_reason and 'أبوة' not in leave.leave_reason %}
+        <p>وذلك بسبب : {{ leave.leave_reason }}</p>
+        
+        <p>مـع الـتـعـــازي. </p>
+        {% elif 'أبوة' in leave.leave_reason %}
+        <p>مـع أطـيـب الـتـهـانـي. </p>
+        {% endif %}
+    </div>
+    
+    <!-- Respect centered -->
+    <div class="respect">
+        <p>واقبلوا الاحترام،</p>
+    </div>
+    
+    <div class="signature-section">
+        <p style="text-align: left; margin-top: 30px; font-size: 16px; font-weight: bold; margin-bottom: 5px;">
+            مدير التربية والتعليم
+        </p>
+    </div>
+    
+    <div class="copies">
+        <p>نسخة مدير الشؤون الإدارية والمالية</p>
+        <p>نسخة / رئيس قسم شؤون الموظفين</p>
+        <p>نسخة / الديوان</p>
+        {% if leave.employee.is_directorate_employee %}
+        <p>نسخة / لقسم ({{ leave.employee.department }})</p>
+        {% else %}
+        <p>نسخة / لمدرسة ({{ leave.employee.school_name }})</p>
+        {% endif %}
+    </div>
+    
+    <!-- محرر الكتاب -->
+    <div id="editorModal" class="editor-modal no-print">
+        <div class="editor-content">
+            <div class="editor-header">
+                <div class="editor-title">تحرير محتوى كتاب الإجازة العرضية</div>
+                <button class="close-editor" onclick="closeEditor()">&times;</button>
+            </div>
+            
+            <form class="editor-form" id="editorForm">
+                <div class="form-group">
+                    <label for="documentNumber">الرقم:</label>
+                    <input type="text" id="documentNumber" name="documentNumber" placeholder="أدخل رقم الكتاب">
+                </div>
+                
+                <div class="form-group">
+                    <label for="documentDate">التاريخ:</label>
+                    <input type="text" id="documentDate" name="documentDate" placeholder="أدخل تاريخ الكتاب">
+                </div>
+                
+                <div class="form-group">
+                    <label for="correspondingDate">الموافق:</label>
+                    <input type="text" id="correspondingDate" name="correspondingDate" placeholder="أدخل التاريخ الموافق">
+                </div>
+                
+                <div class="form-group">
+                    <label for="employeeInfo">معلومات الموظف:</label>
+                    <textarea id="employeeInfo" name="employeeInfo" rows="3">{% if leave.employee.is_directorate_employee %}{% if leave.employee.job_title == 'رئيس قسم' %}{% if leave.employee.gender == 'أنثى' or leave.employee.gender == 'انثى' %}السيدة{% else %}السيد{% endif %}/ {{ leave.employee.name }} ({{ leave.employee.ministry_number }})
+{% if leave.employee.gender == 'أنثى' or leave.employee.gender == 'انثى' %}رئيسة قسم{% else %}رئيس قسم{% endif %} {{ leave.employee.department }}{% else %}{% if leave.employee.gender == 'أنثى' or leave.employee.gender == 'انثى' %}السيدة{% else %}السيد{% endif %}/ {{ leave.employee.name }} ({{ leave.employee.ministry_number }})
+{% if leave.employee.gender == 'أنثى' or leave.employee.gender == 'انثى' %}ال{{ leave.employee.job_title }}ة{% else %}ال{{ leave.employee.job_title }}{% endif %}
+بوساطة {% if leave.employee.department_head_gender == 'أنثى' %}رئيسة{% else %}رئيس{% endif %} قسم {{ leave.employee.department }}{% endif %}{% else %}{% if leave.employee.gender == 'أنثى' or leave.employee.gender == 'انثى' %}السيدة{% else %}السيد{% endif %}/ {{ leave.employee.name }} ({{ leave.employee.ministry_number }})
+{% if leave.school.gender == 'إناث' %}مديرة المدرسة{% else %}مدير المدرسة{% endif %} {{ leave.school.name }}{% endif %}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="subjectText">الموضوع:</label>
+                    <textarea id="subjectText" name="subjectText" rows="2">{% if 'أبوة' in leave.leave_reason %}الموضوع : إجازة الأبوة
+( الفئة الأولى والثانية والثالثة ){% else %}الموضوع : الإجازات العرضية براتب كامل مع العلاوات
+( الفئة الأولى والثانية والثالثة ){% endif %}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="greetingText">التحية:</label>
+                    <input type="text" id="greetingText" name="greetingText" value="السلام عليكم ورحمة الله وبركاته">
+                </div>
+                
+                <div class="form-group">
+                    <label for="referenceText">الإشارة:</label>
+                    <input type="text" id="referenceText" name="referenceText" value="{% if 'أبوة' not in leave.leave_reason %}إشارة لكتابكم رقم ({{ leave.school_letter_number }}) تاريخ {{ leave.school_letter_date.strftime('%Y/%m/%d') }}م{% endif %}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="legalBasisText">الأساس القانوني:</label>
+                    <textarea id="legalBasisText" name="legalBasisText" rows="3">{% if 'وفاة الزوجة' in leave.leave_reason %}واستناداً لأحكام المادة رقم (53/ ب) من نظام إدارة الموارد البشرية في القطاع العام رقم (33) لسنة 2024م، والصلاحيات المفوضة الي بموجب كتاب عطوفة الأمين العام للشؤون الإدارية والمالية رقم (13669/1/70) تاريخ 16/3/2025م.{% elif 'عرضية' in leave.leave_reason %}واستناداً لأحكام المادة رقم (53/ ج) من نظام إدارة الموارد البشرية في القطاع العام رقم (33) لسنة 2024م.{% elif 'أبوة' in leave.leave_reason %}واستناداً لأحكام المادة رقم (52) من نظام إدارة الموارد البشرية في القطاع العام رقم (33) لسنة 2024م، والصلاحيات المفوضة الي بموجب كتاب عطوفة الأمين العام للشؤون الإدارية والمالية رقم (13669/1/70) تاريخ 16/3/2025م.{% else %}واستناداً لأحكام المادة رقم (53/ أ) من نظام إدارة الموارد البشرية في القطاع العام رقم (33) لسنة 2024م، والصلاحيات المفوضة الي بموجب كتاب عطوفة الأمين العام للشؤون الإدارية والمالية رقم (13669/1/70) تاريخ 16/3/2025م.{% endif %}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="decisionText">قرار الإجازة:</label>
+                    <textarea id="decisionText" name="decisionText" rows="3">{% if 'أبوة' in leave.leave_reason %}قررت اعتبار تغيبك عن العمل يوم {{ leave.start_date.strftime('%Y/%m/%d') }}م{% if leave.days_count > 1 %} إلى يوم {{ leave.end_date.strftime('%Y/%m/%d') }}م{% endif %} إجازة أبوة.{% else %}قررت اعتبار تغيبك عن العمل يوم {{ leave.start_date.strftime('%Y/%m/%d') }}م{% if leave.days_count > 1 %} إلى يوم {{ leave.end_date.strftime('%Y/%m/%d') }}م{% endif %} إجازة عرضية براتب كامل مع العلاوات.{% endif %}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="reasonText">السبب والتهنئة/التعازي:</label>
+                    <textarea id="reasonText" name="reasonText" rows="2">{% if 'عرضية' not in leave.leave_reason and 'أبوة' not in leave.leave_reason %}وذلك بسبب : {{ leave.leave_reason }}
+مـع الـتـعـــازي.{% elif 'أبوة' in leave.leave_reason %}مـع أطـيـب الـتـهـانـي.{% endif %}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="closingText">الختام:</label>
+                    <input type="text" id="closingText" name="closingText" value="واقبلوا الاحترام،">
+                </div>
+                
+                <div class="form-group">
+                    <label for="signatureText">التوقيع:</label>
+                    <input type="text" id="signatureText" name="signatureText" value="مدير التربية والتعليم">
+                </div>
+                
+                <div class="form-group">
+                    <label for="copiesText">النسخ:</label>
+                    <textarea id="copiesText" name="copiesText" rows="4">نسخة مدير الشؤون الإدارية والمالية
+نسخة / رئيس قسم شؤون الموظفين
+نسخة / الديوان
+{% if leave.employee.is_directorate_employee %}نسخة / لقسم ({{ leave.employee.department }}){% else %}نسخة / لمدرسة ({{ leave.employee.school_name }}){% endif %}</textarea>
+                </div>
+                
+                <div class="editor-actions">
+                    <button type="button" class="preview-button" onclick="previewChanges()">معاينة التغييرات</button>
+                    <button type="button" class="save-button" onclick="applyChanges()">تطبيق التغييرات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        function openEditor() {
+            document.getElementById('editorModal').style.display = 'block';
+        }
+        
+        function closeEditor() {
+            document.getElementById('editorModal').style.display = 'none';
+        }
+        
+        function previewChanges() {
+            // تطبيق التغييرات مؤقتاً للمعاينة
+            applyChangesToDocument();
+            closeEditor();
+        }
+        
+        function applyChanges() {
+            // تطبيق التغييرات نهائياً
+            applyChangesToDocument();
+            closeEditor();
+            alert('تم تطبيق التغييرات بنجاح!');
+        }
+        
+        function applyChangesToDocument() {
+            // تحديث معلومات الوثيقة
+            const documentInfoPs = document.querySelectorAll('.document-info p');
+            if (documentInfoPs.length >= 3) {
+                const documentNumber = document.getElementById('documentNumber').value;
+                const documentDate = document.getElementById('documentDate').value;
+                const correspondingDate = document.getElementById('correspondingDate').value;
+                
+                if (documentNumber) documentInfoPs[0].innerHTML = 'الرقم ' + documentNumber;
+                if (documentDate) documentInfoPs[1].innerHTML = 'التاريخ ' + documentDate;
+                if (correspondingDate) documentInfoPs[2].innerHTML = 'الموافق ' + correspondingDate;
+            }
+            
+            // تحديث معلومات الموظف
+            const titleElement = document.querySelector('.title');
+            if (titleElement) {
+                const employeeInfo = document.getElementById('employeeInfo').value;
+                if (employeeInfo) {
+                    titleElement.innerHTML = employeeInfo.split('\n').map(line => `<p>${line}</p>`).join('');
+                }
+            }
+            
+            // تحديث الموضوع
+            const subjectElement = document.querySelector('.subject');
+            if (subjectElement) {
+                const subjectText = document.getElementById('subjectText').value;
+                if (subjectText) {
+                    subjectElement.innerHTML = subjectText.split('\n').map(line => `<p>${line}</p>`).join('');
+                }
+            }
+            
+            // تحديث المحتوى
+            const contentPs = document.querySelectorAll('.content p');
+            if (contentPs.length >= 1) {
+                const greetingText = document.getElementById('greetingText').value;
+                const referenceText = document.getElementById('referenceText').value;
+                const legalBasisText = document.getElementById('legalBasisText').value;
+                const decisionText = document.getElementById('decisionText').value;
+                const reasonText = document.getElementById('reasonText').value;
+                
+                let contentIndex = 0;
+                if (greetingText && contentPs[contentIndex]) {
+                    contentPs[contentIndex].textContent = greetingText;
+                    contentIndex++;
+                }
+                if (referenceText && contentPs[contentIndex]) {
+                    contentPs[contentIndex].textContent = referenceText;
+                    contentIndex++;
+                }
+                if (legalBasisText && contentPs[contentIndex]) {
+                    contentPs[contentIndex].textContent = legalBasisText;
+                    contentIndex++;
+                }
+                if (decisionText && contentPs[contentIndex]) {
+                    contentPs[contentIndex].textContent = decisionText;
+                    contentIndex++;
+                }
+                if (reasonText && contentPs[contentIndex]) {
+                    const reasonLines = reasonText.split('\n');
+                    for (let i = 0; i < reasonLines.length && contentIndex < contentPs.length; i++) {
+                        if (reasonLines[i].trim()) {
+                            contentPs[contentIndex].textContent = reasonLines[i];
+                            contentIndex++;
+                        }
+                    }
+                }
+            }
+            
+            // تحديث الختام
+            const respectElement = document.querySelector('.respect p');
+            if (respectElement) {
+                const closingText = document.getElementById('closingText').value;
+                if (closingText) respectElement.textContent = closingText;
+            }
+            
+            // تحديث التوقيع
+            const signatureElement = document.querySelector('.signature-section p');
+            if (signatureElement) {
+                const signatureText = document.getElementById('signatureText').value;
+                if (signatureText) signatureElement.textContent = signatureText;
+            }
+            
+            // تحديث النسخ
+            const copiesElement = document.querySelector('.copies');
+            if (copiesElement) {
+                const copiesText = document.getElementById('copiesText').value;
+                if (copiesText) {
+                    copiesElement.innerHTML = copiesText.split('\n').map(line => `<p>${line}</p>`).join('');
+                }
+            }
+        }
+        
+        // إغلاق المحرر عند النقر خارجه
+        window.onclick = function(event) {
+            const modal = document.getElementById('editorModal');
+            if (event.target == modal) {
+                closeEditor();
+            }
+        }
+    </script>
+</body>
+</html>

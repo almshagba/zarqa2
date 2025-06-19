@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}عرض الإجازة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">تفاصيل الإجازة</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>اسم الموظف:</strong> {{ leave.employee.name }}</p>
+                            <p><strong>الرقم المدني:</strong> {{ leave.employee.civil_id }}</p>
+                            <p><strong>الرقم الوزاري:</strong> {{ leave.employee.ministry_number }}</p>
+                            <p><strong>المدرسة:</strong> {{ leave.employee.school.name if leave.employee.school else 'غير محدد' }}</p>
+                            <p><strong>نوع الإجازة:</strong> {{ leave.leave_type }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>تاريخ البداية:</strong> {{ leave.start_date.strftime('%Y-%m-%d') if leave.start_date else 'غير محدد' }}</p>
+                            <p><strong>تاريخ النهاية:</strong> {{ leave.end_date.strftime('%Y-%m-%d') if leave.end_date else 'غير محدد' }}</p>
+                            <p><strong>عدد الأيام:</strong> {{ leave.days_count if leave.days_count else 'غير محدد' }}</p>
+                            <p><strong>وقت البداية:</strong> {{ leave.start_time.strftime('%H:%M') if leave.start_time else 'غير محدد' }}</p>
+                            <p><strong>وقت النهاية:</strong> {{ leave.end_time.strftime('%H:%M') if leave.end_time else 'غير محدد' }}</p>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <p><strong>السبب:</strong></p>
+                            <p class="border p-2">{{ leave.reason or 'غير محدد' }}</p>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <p><strong>ملاحظات:</strong></p>
+                            <p class="border p-2">{{ leave.notes or 'لا توجد ملاحظات' }}</p>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <p><strong>تاريخ الإنشاء:</strong> {{ leave.created_at.strftime('%Y-%m-%d %H:%M') if leave.created_at else 'غير محدد' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>آخر تحديث:</strong> {{ leave.updated_at.strftime('%Y-%m-%d %H:%M') if leave.updated_at else 'غير محدد' }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('leave.leaves') }}" class="btn btn-secondary">العودة لقائمة الإجازات</a>
+                    {% if leave.leave_type == 'مغادرة' %}
+                        <a href="{{ url_for('leave.departures') }}" class="btn btn-info">العودة لقائمة المغادرات</a>
+                    {% endif %}
+                    <a href="{{ url_for('leave.edit_leave', id=leave.id) }}" class="btn btn-primary">تعديل</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

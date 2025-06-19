@@ -1,0 +1,476 @@
+{% extends 'base.html' %}
+
+{% block title %}إضافة إجازة عرضية جديدة{% endblock %}
+
+{% block content %}
+<style>
+    .search-result {
+        margin-top: 10px;
+    }
+    #principals_list .list-group {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+    .principal-item {
+        cursor: pointer;
+        text-align: right;
+    }
+    .principal-item:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h3>إضافة إجازة عرضية جديدة</h3>
+        </div>
+        <div class="card-body">
+            <!-- حقل البحث بالاسم أو الرقم الوزاري -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label for="search_term" class="form-label">البحث بالاسم أو الرقم الوزاري</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="search_term" placeholder="أدخل اسم أو الرقم الوزاري للموظف">
+                        <button class="btn btn-outline-primary" type="button" id="search_principal_btn">
+                            <i class="fas fa-search"></i> بحث
+                        </button>
+                    </div>
+                    <div id="search_result" class="search-result mt-2"></div>
+                </div>
+            </div>
+            
+            <form id="principalLeaveForm">
+                <!-- الموظف -->
+                <div class="form-group mb-3">
+                    <label for="employee_id">الموظف <span class="text-danger">*</span></label>
+                    <select class="form-control" id="employee_id" name="employee_id" required>
+                        <option value="">اختر الموظف</option>
+                        {% for employee in employees %}
+                        <option value="{{ employee.id }}">{{ employee.name }} - {{ employee.job_title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- المدرسة -->
+                <div class="form-group mb-3">
+                    <label for="school_id">المدرسة <span class="text-danger">*</span></label>
+                    <select class="form-control" id="school_id" name="school_id" required>
+                        <option value="">اختر المدرسة</option>
+                        {% for school in schools %}
+                        <option value="{{ school.id }}">{{ school.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- رقم خطاب المدرسة -->
+                <div class="form-group mb-3">
+                    <label for="school_letter_number">رقم خطاب المدرسة <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="school_letter_number" name="school_letter_number" required>
+                </div>
+                
+                <!-- تاريخ خطاب المدرسة -->
+                <div class="form-group mb-3">
+                    <label for="school_letter_date">تاريخ خطاب المدرسة <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="school_letter_date" name="school_letter_date" required>
+                </div>
+                
+                <!-- سبب الإجازة -->
+                <div class="form-group mb-3">
+                    <label for="leave_reason">سبب الإجازة <span class="text-danger">*</span></label>
+                    <select class="form-control" id="leave_reason" name="leave_reason" required>
+                        <option value="">اختر سبب الإجازة</option>
+                        <option value="وفاة الزوجة">وفاة الزوجة</option>
+                        <option value="وفاة الزوج">وفاة الزوج</option>
+                        <option value="وفاة أحد الأقارب من الدرجة الأولى">وفاة أحد الأقارب من الدرجة الأولى</option>
+                        <option value="وفاة أحد الأقارب من الدرجة الثانية">وفاة أحد الأقارب من الدرجة الثانية</option>
+                        <option value="وفاة أحد الأقارب من الدرجة الثالثة">وفاة أحد الأقارب من الدرجة الثالثة</option>
+                        <option value="أبوة">أبوة</option>
+                        <option value="عرضية">عرضية</option>
+                        <option value="أخرى">أخرى</option>
+                    </select>
+                </div>
+                
+                <!-- سبب آخر للإجازة -->
+                <div class="form-group mb-3" id="other_reason_div" style="display: none;">
+                    <label for="other_reason">سبب آخر للإجازة <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="other_reason" name="other_reason">
+                </div>
+                
+                <!-- تاريخ بداية الإجازة -->
+                <div class="form-group mb-3">
+                    <label for="start_date">تاريخ بداية الإجازة <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" required>
+                </div>
+                
+                <!-- تاريخ نهاية الإجازة -->
+                <div class="form-group mb-3">
+                    <label for="end_date">تاريخ نهاية الإجازة <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" required>
+                </div>
+                
+                <!-- عدد أيام الإجازة -->
+                <div class="form-group mb-3">
+                    <label for="days_count">عدد أيام الإجازة <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="days_count" name="days_count" readonly>
+                </div>
+                
+                <!-- ملاحظات -->
+                <div class="form-group mb-3">
+                    <label for="notes">ملاحظات</label>
+                    <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <button type="submit" class="btn btn-primary">إضافة</button>
+                    <a href="{{ url_for('principal_leaves.principal_casual_leaves_list') }}" class="btn btn-secondary">إلغاء</a>
+                </div>
+                
+                <div id="formMessages" class="mt-3"></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchBtn = document.getElementById('search_principal_btn');
+        const searchInput = document.getElementById('search_term');
+        const searchResult = document.getElementById('search_result');
+        const employeeSelect = document.getElementById('employee_id');
+        const schoolSelect = document.getElementById('school_id');
+
+        // البحث عن الموظف بالاسم أو الرقم الوزاري
+        searchBtn.addEventListener('click', function() {
+            const searchTerm = searchInput.value.trim();
+            console.log('بدء البحث عن:', searchTerm);
+            
+            if (!searchTerm) {
+                searchResult.innerHTML = '<div class="alert alert-warning">الرجاء إدخال الاسم أو الرقم الوزاري</div>';
+                return;
+            }
+            
+            // إظهار مؤشر التحميل
+            searchResult.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">جاري التحميل...</span></div><p class="mt-2">جاري البحث...</p></div>';
+            
+            // طباعة عنوان URL للتشخيص
+            const apiUrl = `/api/principal_search?search_term=${encodeURIComponent(searchTerm)}`;
+            // console.log('عنوان API:', apiUrl);
+            
+            // إرسال طلب AJAX للبحث عن المدير
+            fetch(apiUrl)
+                .then(response => {
+                    // console.log('استجابة الخادم:', response.status, response.statusText);
+                    if (!response.ok) {
+                        throw new Error(`خطأ في الاستجابة: ${response.status} ${response.statusText}`);
+                    }
+                    return response.text().then(text => {
+                        try {
+                            // console.log('نص الاستجابة:', text);
+                            return JSON.parse(text);
+                        } catch (e) {
+                            // console.error('خطأ في تحليل JSON:', e);
+                            throw new Error(`خطأ في تحليل استجابة الخادم: ${e.message}`);
+                        }
+                    });
+                })
+                .then(data => {
+                    // console.log('بيانات الاستجابة:', data);
+                    
+                    if (data.success) {
+                        const principals = data.principals;
+                        
+                        if (principals.length === 0) {
+                            searchResult.innerHTML = '<div class="alert alert-warning">لم يتم العثور على نتائج</div>';
+                            return;
+                        } else if (principals.length === 1) {
+                            // إذا تم العثور على موظف واحد فقط، يتم تحديده تلقائيًا
+                            const principal = principals[0];
+                            searchResult.innerHTML = `<div class="alert alert-success">تم العثور على الموظف: ${principal.name}</div>`;
+                            
+                            // تحديد الموظف في القائمة المنسدلة
+                            let foundOption = false;
+                            for (let i = 0; i < employeeSelect.options.length; i++) {
+                                if (employeeSelect.options[i].value == principal.id) {
+                                    employeeSelect.selectedIndex = i;
+                                    foundOption = true;
+                                    // تشغيل حدث change لتحديث أي عناصر مرتبطة
+                                    const event = new Event('change');
+                                    employeeSelect.dispatchEvent(event);
+                                    break;
+                                }
+                            }
+                            
+                            // إذا لم يتم العثور على الموظف في القائمة، أضفه
+                            if (!foundOption && principal.id) {
+                                const newOption = new Option(principal.name, principal.id);
+                                employeeSelect.add(newOption);
+                                employeeSelect.value = principal.id;
+                                // تشغيل حدث change لتحديث أي عناصر مرتبطة
+                                const event = new Event('change');
+                                employeeSelect.dispatchEvent(event);
+                            }
+                            
+                            // إذا كان للموظف مدرسة، قم بتحديدها
+                            if (principal.school_id) {
+                                for (let i = 0; i < schoolSelect.options.length; i++) {
+                                    if (schoolSelect.options[i].value == principal.school_id) {
+                                        schoolSelect.selectedIndex = i;
+                                        // تعطيل حقل المدرسة لأن الموظف مرتبط بمدرسة محددة
+                                        schoolSelect.disabled = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        } else {
+                            // إذا تم العثور على أكثر من موظف، عرض قائمة للاختيار
+                            let html = `<div class="alert alert-success">تم العثور على ${principals.length} موظفين:</div>`;
+                            html += '<div class="list-group mt-2">';
+                            
+                            principals.forEach(principal => {
+                                const schoolInfo = principal.school_name ? ` - ${principal.school_name}` : '';
+                                html += `<a href="#" class="list-group-item list-group-item-action principal-item" 
+                                    data-id="${principal.id}" 
+                                    data-school-id="${principal.school_id || ''}">
+                                    <strong>${principal.name}</strong> (${principal.ministry_number})${schoolInfo}
+                                </a>`;
+                            });
+                            
+                            html += '</div>';
+                            searchResult.innerHTML = html;
+                            
+                            // إضافة مستمعي الأحداث للعناصر المضافة
+                            document.querySelectorAll('.principal-item').forEach(item => {
+                                item.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    const principalId = this.getAttribute('data-id');
+                                    const schoolId = this.getAttribute('data-school-id');
+                                    
+                                    // تحديد الموظف في القائمة المنسدلة
+                                    let foundOption = false;
+                                    for (let i = 0; i < employeeSelect.options.length; i++) {
+                                        if (employeeSelect.options[i].value == principalId) {
+                                            employeeSelect.selectedIndex = i;
+                                            foundOption = true;
+                                            // تشغيل حدث change لتحديث أي عناصر مرتبطة
+                                            const event = new Event('change');
+                                            employeeSelect.dispatchEvent(event);
+                                            break;
+                                        }
+                                    }
+                                    
+                                    // إذا لم يتم العثور على الموظف في القائمة، أضفه
+                                    if (!foundOption && principalId) {
+                                        // استخراج اسم الموظف من النص المعروض
+                                        const principalName = this.querySelector('strong').textContent;
+                                        const newOption = new Option(principalName, principalId);
+                                        employeeSelect.add(newOption);
+                                        employeeSelect.value = principalId;
+                                        // تشغيل حدث change لتحديث أي عناصر مرتبطة
+                                        const event = new Event('change');
+                                        employeeSelect.dispatchEvent(event);
+                                    }
+                                    
+                                    // إذا كان للموظف مدرسة، قم بتحديدها
+                                    if (schoolId) {
+                                        for (let i = 0; i < schoolSelect.options.length; i++) {
+                                            if (schoolSelect.options[i].value == schoolId) {
+                                                schoolSelect.selectedIndex = i;
+                                                // تعطيل حقل المدرسة لأن الموظف مرتبط بمدرسة محددة
+                                                schoolSelect.disabled = true;
+                                                break;
+                                            }
+                                        }
+                                    } else {
+                                        // إعادة تفعيل حقل المدرسة إذا لم يكن الموظف مرتبط بمدرسة
+                                        schoolSelect.disabled = false;
+                                    }
+                                    
+                                    // تحديث نتيجة البحث
+                                    searchResult.innerHTML = `<div class="alert alert-success">تم اختيار الموظف: ${this.textContent}</div>`;
+                                });
+                            });
+                        }
+                    } else {
+                        // لم يتم العثور على موظفين
+                        searchResult.innerHTML = `<div class="alert alert-danger">${data.message || 'لم يتم العثور على موظفين مطابقين لكلمة البحث'}</div>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    searchResult.innerHTML = `<div class="alert alert-danger">حدث خطأ أثناء البحث: ${error.message}</div>`;
+                });
+        });
+        
+        // البحث عند الضغط على Enter
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchBtn.click();
+            }
+        });
+
+        // إظهار حقل السبب الآخر عند اختيار "أخرى"
+        document.getElementById('leave_reason').addEventListener('change', function() {
+            const otherReasonDiv = document.getElementById('other_reason_div');
+            if (this.value === 'أخرى') {
+                otherReasonDiv.style.display = 'block';
+                document.getElementById('other_reason').setAttribute('required', 'required');
+            } else {
+                otherReasonDiv.style.display = 'none';
+                document.getElementById('other_reason').removeAttribute('required');
+            }
+            
+            // تحديد مدة الإجازة بناءً على السبب
+            const startDate = document.getElementById('start_date').value;
+            if (startDate) {
+                setEndDateBasedOnReason(startDate, this.value);
+            }
+        });
+        
+        // حساب عدد أيام الإجازة عند تغيير التواريخ
+        document.getElementById('start_date').addEventListener('change', function() {
+            const leaveReason = document.getElementById('leave_reason').value;
+            if (leaveReason) {
+                setEndDateBasedOnReason(this.value, leaveReason);
+            } else {
+                calculateDays();
+            }
+        });
+        
+        document.getElementById('end_date').addEventListener('change', calculateDays);
+        
+        // دالة لتحديد تاريخ النهاية بناءً على سبب الإجازة
+        function setEndDateBasedOnReason(startDateStr, reason) {
+            if (!startDateStr) return;
+            
+            const startDate = new Date(startDateStr);
+            let daysToAdd = 0;
+            
+            switch (reason) {
+                case 'وفاة الزوجة':
+                    daysToAdd = 9; // 10 أيام بما فيها يوم البداية
+                    break;
+                case 'وفاة الزوج':
+                    daysToAdd = 29; // 30 يوم بما فيها يوم البداية
+                    break;
+                case 'وفاة أحد الأقارب من الدرجة الأولى':
+                case 'أبوة':
+                    daysToAdd = 2; // 3 أيام بما فيها يوم البداية
+                    break;
+                case 'وفاة أحد الأقارب من الدرجة الثانية':
+                    daysToAdd = 1; // يومين بما فيها يوم البداية
+                    break;
+                case 'وفاة أحد الأقارب من الدرجة الثالثة':
+                    daysToAdd = 0; // يوم واحد (يوم البداية نفسه)
+                    break;
+                case 'عرضية':
+                    daysToAdd = 0; // لا تحديد مدة محددة
+                    break;
+                default:
+                    return; // لا تغيير لأسباب أخرى
+            }
+            
+            const endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + daysToAdd);
+            
+            // تنسيق التاريخ بصيغة YYYY-MM-DD
+            const endDateFormatted = endDate.toISOString().split('T')[0];
+            document.getElementById('end_date').value = endDateFormatted;
+            
+            calculateDays();
+        }
+        
+        // دالة لحساب عدد أيام الإجازة
+        function calculateDays() {
+            const startDateStr = document.getElementById('start_date').value;
+            const endDateStr = document.getElementById('end_date').value;
+            
+            if (startDateStr && endDateStr) {
+                const startDate = new Date(startDateStr);
+                const endDate = new Date(endDateStr);
+                
+                // التحقق من أن تاريخ البداية قبل تاريخ النهاية
+                if (startDate > endDate) {
+                    document.getElementById('formMessages').innerHTML = 
+                        '<div class="alert alert-danger">تاريخ بداية الإجازة يجب أن يكون قبل تاريخ نهايتها</div>';
+                    document.getElementById('days_count').value = '';
+                    return;
+                }
+                
+                // حساب الفرق بالأيام
+                const diffTime = Math.abs(endDate - startDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 لتضمين يوم النهاية
+                
+                document.getElementById('days_count').value = diffDays;
+                document.getElementById('formMessages').innerHTML = '';
+            }
+        }
+        
+        // معالجة إرسال النموذج
+        document.getElementById('principalLeaveForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // التحقق من صحة النموذج
+            if (!this.checkValidity()) {
+                e.stopPropagation();
+                this.classList.add('was-validated');
+                return;
+            }
+            
+            // جمع بيانات النموذج
+            const formData = {
+                employee_id: document.getElementById('employee_id').value,
+                school_id: document.getElementById('school_id').value,
+                school_letter_number: document.getElementById('school_letter_number').value,
+                school_letter_date: document.getElementById('school_letter_date').value,
+                start_date: document.getElementById('start_date').value,
+                end_date: document.getElementById('end_date').value,
+                days_count: document.getElementById('days_count').value,
+                notes: document.getElementById('notes').value
+            };
+            
+            // تحديد سبب الإجازة
+            const leaveReason = document.getElementById('leave_reason').value;
+            if (leaveReason === 'أخرى') {
+                formData.leave_reason = document.getElementById('other_reason').value;
+            } else {
+                formData.leave_reason = leaveReason;
+            }
+            
+            // إظهار رسالة انتظار
+            document.getElementById('formMessages').innerHTML = 
+                '<div class="alert alert-info">جاري حفظ البيانات...</div>';
+            
+            // إرسال البيانات باستخدام واجهة برمجة التطبيقات
+            fetch('/api/create_principal_leave_v2', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('formMessages').innerHTML = 
+                        '<div class="alert alert-success">تم إضافة الإجازة العرضية بنجاح</div>';
+                    
+                    // إعادة التوجيه إلى صفحة القائمة بعد ثانيتين
+                    setTimeout(() => {
+                        window.location.href = "{{ url_for('principal_leaves.principal_casual_leaves_list') }}";
+                    }, 2000);
+                } else {
+                    document.getElementById('formMessages').innerHTML = 
+                        `<div class="alert alert-danger">فشل إضافة الإجازة: ${data.message}</div>`;
+                }
+            })
+            .catch(error => {
+                document.getElementById('formMessages').innerHTML = 
+                    `<div class="alert alert-danger">خطأ في الاتصال: ${error}</div>`;
+            });
+        });
+    });
+</script>
+{% endblock %}

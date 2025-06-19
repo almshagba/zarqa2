@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}الموقف الفني - النواقص{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-exclamation-triangle"></i> الموقف الفني - النواقص حسب المدارس</h4>
+                    <a href="{{ url_for('report.technical_deficiency_management') }}" class="btn btn-light btn-sm">
+                        <i class="fas fa-cogs"></i> إدارة النقص الفني
+                    </a>
+                </div>
+                <div class="card-body">
+                    <!-- عنوان المديرية -->
+                    <div class="text-center mb-4" style="border: 2px solid #000; padding: 15px; background-color: #f8f9fa;">
+                        <h3 class="text-dark mb-2" style="font-weight: bold;">مديرية التربية والتعليم لمنطقة الزرقاء الثانية</h3>
+                        <h4 class="text-dark mb-1">قسم شؤون الموظفين</h4>
+                        <h5 class="text-dark mb-0">سجل زيادة ونواقص المدارس</h5>
+                    </div>
+
+                    <!-- فلاتر البحث -->
+                    <form method="GET" class="mb-4">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <label for="specialization" class="form-label">المبحث</label>
+                                <select name="specialization" id="specialization" class="form-select">
+                                    <option value="">جميع المباحث</option>
+                                    {% for spec in all_specializations %}
+                                    <option value="{{ spec }}" {% if specialization_filter == spec %}selected{% endif %}>
+                                        {{ spec }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="job" class="form-label">الوظيفة</label>
+                                <select name="job" id="job" class="form-select">
+                                    <option value="">جميع الوظائف</option>
+                                    {% for job in all_jobs %}
+                                    <option value="{{ job }}" {% if job_filter == job %}selected{% endif %}>
+                                        {{ job }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="subject" class="form-label">المبحث</label>
+                                <select name="subject" id="subject" class="form-select">
+                                    <option value="">جميع المباحث</option>
+                                    {% for subject in all_subjects %}
+                                    <option value="{{ subject }}" {% if subject_filter == subject %}selected{% endif %}>
+                                        {{ subject }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="gender" class="form-label">جنس المدرسة</label>
+                                <select name="gender" id="gender" class="form-select">
+                                    <option value="">جميع المدارس</option>
+                                    <option value="ذكور" {% if gender_filter == 'ذكور' %}selected{% endif %}>ذكور</option>
+                                    <option value="إناث" {% if gender_filter == 'إناث' %}selected{% endif %}>إناث</option>
+                                    <option value="مختلطة" {% if gender_filter == 'مختلطة' %}selected{% endif %}>مختلطة</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="school" class="form-label">المدرسة</label>
+                                <select name="school" id="school" class="form-select">
+                                    <option value="">جميع المدارس</option>
+                                    {% for school in all_schools %}
+                                    <option value="{{ school.id }}" {% if school_filter == school.id|string %}selected{% endif %}>
+                                        {{ school.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="fas fa-search"></i> بحث
+                                </button>
+                                <a href="{{ url_for('report.technical_position') }}" class="btn btn-secondary me-2">
+                                    <i class="fas fa-refresh"></i> إعادة تعيين
+                                </a>
+                                <a href="{{ url_for('report.export_technical_position', **request.args) }}" class="btn btn-success">
+                                    <i class="fas fa-file-excel"></i> تصدير Excel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- الجدول الرئيسي بالتصميم المطلوب -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered" style="border: 3px solid #000; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" class="text-center align-middle" style="border: 2px solid #000; background-color: #f8f9fa; font-weight: bold; vertical-align: middle;">المدرسة</th>
+                                    <th colspan="4" class="text-center" style="border: 2px solid #000; background-color: #e9ecef; font-weight: bold;">النواقص</th>
+                                    <th colspan="4" class="text-center" style="border: 2px solid #000; background-color: #d4edda; font-weight: bold;">الزوائد</th>
+                                </tr>
+                                <tr>
+                                    <th class="text-center" style="border: 2px solid #000; background-color: #fff2cc; font-weight: bold;">بكالوريوس</th>
+                                    <th class="text-center" style="border: 2px solid #000; background-color: #fff2cc; font-weight: bold;">دبلوم</th>
+                                    <th class="text-center" style="border: 2px solid #000; background-color: #fff2cc; font-weight: bold;">المبحث</th>
+                                    <th class="text-center" style="border: 2px solid #000; background-color: #fff2cc; font-weight: bold;">المنطقة</th>
+                                    <th class="text-center" style="border: 2px solid #000; background-color: #d1ecf1; font-weight: bold;">بكالوريوس</th>
+                                    <th class="text-center" style="border: 2px solid #000; background-color: #d1ecf1; font-weight: bold;">دبلوم</th>
+                                    <th class="text-center" style="border: 2px solid #000; background-color: #d1ecf1; font-weight: bold;">المبحث</th>
+                                    <th class="text-center" style="border: 2px solid #000; background-color: #d1ecf1; font-weight: bold;">المنطقة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set grouped_deficiencies = deficiencies | groupby('school.name') %}
+                                {% for school_name, school_deficiencies in grouped_deficiencies %}
+                                    {% set school_deficiencies_list = school_deficiencies | list %}
+                                    {% for deficiency in school_deficiencies_list %}
+                                    <tr>
+                                        {% if loop.first %}
+                                        <td rowspan="{{ school_deficiencies_list | length }}" class="align-middle" style="border: 2px solid #000; font-weight: bold; background-color: #f8f9fa;">{{ school_name }}</td>
+                                        {% endif %}
+                                        <td class="text-center" style="border: 2px solid #000;">{{ deficiency.deficiency_bachelor if deficiency.deficiency_bachelor > 0 else '' }}</td>
+                                        <td class="text-center" style="border: 2px solid #000;">{{ deficiency.deficiency_diploma if deficiency.deficiency_diploma > 0 else '' }}</td>
+                                        <td class="text-center" style="border: 2px solid #000;">{{ deficiency.subject if deficiency.subject else '' }}</td>
+                                        <td class="text-center" style="border: 2px solid #000;">{{ deficiency.school.region if deficiency.school.region else '' }}</td>
+                                        <td class="text-center" style="border: 2px solid #000;">{{ deficiency.surplus_bachelor if deficiency.surplus_bachelor > 0 else '' }}</td>
+                                        <td class="text-center" style="border: 2px solid #000;">{{ deficiency.surplus_diploma if deficiency.surplus_diploma > 0 else '' }}</td>
+                                        <td class="text-center" style="border: 2px solid #000;">{{ deficiency.subject if deficiency.subject else '' }}</td>
+                                        <td class="text-center" style="border: 2px solid #000;">{{ deficiency.school.region if deficiency.school.region else '' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% endfor %}
+                                
+                                <!-- صف المجموع -->
+                                <tr style="background-color: #f8f9fa; font-weight: bold;">
+                                    <td class="text-center" style="border: 2px solid #000; font-weight: bold;">المجموع</td>
+                                    <td class="text-center" style="border: 2px solid #000; font-weight: bold;">{{ deficiencies | map(attribute='deficiency_bachelor') | sum }}</td>
+                                    <td class="text-center" style="border: 2px solid #000; font-weight: bold;">{{ deficiencies | map(attribute='deficiency_diploma') | sum }}</td>
+                                    <td class="text-center" style="border: 2px solid #000; font-weight: bold;">-</td>
+                                    <td class="text-center" style="border: 2px solid #000; font-weight: bold;">{{ (deficiencies | map(attribute='deficiency_bachelor') | sum) + (deficiencies | map(attribute='deficiency_diploma') | sum) }}</td>
+                                    <td class="text-center" style="border: 2px solid #000; font-weight: bold;">{{ deficiencies | map(attribute='surplus_bachelor') | sum }}</td>
+                                    <td class="text-center" style="border: 2px solid #000; font-weight: bold;">{{ deficiencies | map(attribute='surplus_diploma') | sum }}</td>
+                                    <td class="text-center" style="border: 2px solid #000; font-weight: bold;">-</td>
+                                    <td class="text-center" style="border: 2px solid #000; font-weight: bold;">{{ (deficiencies | map(attribute='surplus_bachelor') | sum) + (deficiencies | map(attribute='surplus_diploma') | sum) }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if not deficiencies %}
+                    <div class="alert alert-success text-center">
+                        <i class="fas fa-check-circle"></i> لا توجد نواقص مسجلة في المعايير المحددة
+                        <br>
+                        <a href="{{ url_for('report.technical_deficiency_management') }}" class="btn btn-primary mt-2">
+                            <i class="fas fa-plus"></i> إضافة نقص فني جديد
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

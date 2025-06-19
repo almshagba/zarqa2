@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .stats-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    }
+    
+    .stats-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+    }
+    
+    .stats-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    
+    .stats-icon {
+        font-size: 3rem;
+        opacity: 0.8;
+    }
+    
+    .quick-action-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .quick-action-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    }
+    
+    .action-btn {
+        border: none;
+        border-radius: 12px;
+        padding: 15px 20px;
+        margin: 8px 0;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: block;
+        color: #333;
+        background: #f8f9fa;
+    }
+    
+    .action-btn:hover {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        transform: translateX(5px);
+    }
+    
+    .action-btn i {
+        width: 25px;
+        text-align: center;
+        margin-left: 10px;
+    }
+    
+    .section-title {
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 20px;
+        position: relative;
+        padding-bottom: 10px;
+    }
+    
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 50px;
+        height: 3px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border-radius: 2px;
+    }
+</style>
+
+<div class="dashboard-header">
+    <h1 class="mb-2"><i class="fas fa-tachometer-alt me-3"></i>لوحة التحكم الرئيسية</h1>
+    <p class="mb-0">نظام إدارة شؤون الموظفين - وزارة التربية والتعليم</p>
+</div>
+
+<div class="row">
+    <!-- إحصائيات الموظفين -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card stats-card bg-gradient-primary text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-users stats-icon mb-3"></i>
+                <h5 class="card-title">إجمالي الموظفين</h5>
+                <div class="stats-number">{{ employees_count }}</div>
+                <a href="{{ url_for('employee.employees') }}" class="btn btn-light btn-sm mt-2">
+                    <i class="fas fa-eye me-1"></i>عرض التفاصيل
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- إحصائيات المدارس -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card stats-card bg-gradient-success text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-school stats-icon mb-3"></i>
+                <h5 class="card-title">إجمالي المدارس</h5>
+                <div class="stats-number">{{ schools_count }}</div>
+                <a href="{{ url_for('school.schools') }}" class="btn btn-light btn-sm mt-2">
+                    <i class="fas fa-eye me-1"></i>عرض التفاصيل
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- إحصائيات النقل -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card stats-card bg-gradient-info text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-exchange-alt stats-icon mb-3"></i>
+                <h5 class="card-title">عمليات النقل</h5>
+                <div class="stats-number">{{ transfers_count }}</div>
+                <a href="{{ url_for('main.transfers_list') }}" class="btn btn-light btn-sm mt-2">
+                    <i class="fas fa-eye me-1"></i>عرض التفاصيل
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- إحصائيات الإجازات -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card stats-card bg-gradient-warning text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-calendar-alt stats-icon mb-3"></i>
+                <h5 class="card-title">الإجازات النشطة</h5>
+                <div class="stats-number">{{ active_leaves_count or 0 }}</div>
+                <a href="{{ url_for('leave.leaves') }}" class="btn btn-light btn-sm mt-2">
+                    <i class="fas fa-eye me-1"></i>عرض التفاصيل
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <h3 class="section-title"><i class="fas fa-bolt me-2"></i>الاختصارات السريعة</h3>
+    </div>
+</div>
+
+<div class="row">
+    <!-- إدارة الموظفين -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card quick-action-card">
+            <div class="card-body">
+                <h5 class="card-title text-center mb-4">
+                    <i class="fas fa-users text-primary me-2"></i>إدارة الموظفين
+                </h5>
+                <a href="{{ url_for('employee.add_employee') }}" class="action-btn">
+                    <i class="fas fa-user-plus"></i>إضافة موظف جديد
+                </a>
+                <a href="{{ url_for('employee.employees') }}" class="action-btn">
+                    <i class="fas fa-list"></i>قائمة الموظفين
+                </a>
+                <a href="{{ url_for('employee.export_employees') }}" class="action-btn">
+                    <i class="fas fa-file-export"></i>تصدير الموظفين
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- إدارة المدارس -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card quick-action-card">
+            <div class="card-body">
+                <h5 class="card-title text-center mb-4">
+                    <i class="fas fa-school text-success me-2"></i>إدارة المدارس
+                </h5>
+                <a href="{{ url_for('school.add_school') }}" class="action-btn">
+                    <i class="fas fa-plus-circle"></i>إضافة مدرسة جديدة
+                </a>
+                <a href="{{ url_for('school.schools') }}" class="action-btn">
+                    <i class="fas fa-list"></i>قائمة المدارس
+                </a>
+                <a href="{{ url_for('report.report_by_school') }}" class="action-btn">
+                    <i class="fas fa-chart-bar"></i>تقارير المدارس
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- إدارة الإجازات -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card quick-action-card">
+            <div class="card-body">
+                <h5 class="card-title text-center mb-4">
+                    <i class="fas fa-calendar-alt text-warning me-2"></i>إدارة الإجازات
+                </h5>
+                <a href="{{ url_for('leave.add_leave') }}" class="action-btn">
+                    <i class="fas fa-plus"></i>إضافة إجازة جديدة
+                </a>
+                <a href="{{ url_for('leave.leaves') }}" class="action-btn">
+                    <i class="fas fa-list"></i>قائمة الإجازات
+                </a>
+                <a href="{{ url_for('leave.leave_balances') }}" class="action-btn">
+                    <i class="fas fa-balance-scale"></i>أرصدة الإجازات
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- إدارة النقل -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card quick-action-card">
+            <div class="card-body">
+                <h5 class="card-title text-center mb-4">
+                    <i class="fas fa-exchange-alt text-info me-2"></i>إدارة النقل
+                </h5>
+                <a href="{{ url_for('main.add_transfer') }}" class="action-btn">
+                    <i class="fas fa-plus"></i>تسجيل نقل جديد
+                </a>
+                <a href="{{ url_for('main.transfers_list') }}" class="action-btn">
+                    <i class="fas fa-list"></i>قائمة النقل
+                </a>
+                <a href="{{ url_for('main.transfers_list') }}" class="action-btn">
+                    <i class="fas fa-chart-line"></i>تقارير النقل
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <h3 class="section-title"><i class="fas fa-chart-bar me-2"></i>التقارير والإحصائيات</h3>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card quick-action-card">
+            <div class="card-body text-center">
+                <i class="fas fa-file-alt text-primary" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                <h5 class="card-title">تقارير الموظفين</h5>
+                <p class="text-muted">تقارير شاملة عن بيانات الموظفين والإحصائيات</p>
+                <a href="{{ url_for('report.comprehensive_report') }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-eye me-1"></i>عرض التقارير
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card quick-action-card">
+            <div class="card-body text-center">
+                <i class="fas fa-calendar-check text-success" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                <h5 class="card-title">تقارير الإجازات</h5>
+                <p class="text-muted">تقارير مفصلة عن الإجازات وأرصدة الموظفين</p>
+                <a href="{{ url_for('leave.leaves') }}" class="btn btn-success btn-sm">
+                    <i class="fas fa-eye me-1"></i>عرض التقارير
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card quick-action-card">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-pie text-info" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                <h5 class="card-title">الإحصائيات العامة</h5>
+                <p class="text-muted">إحصائيات شاملة ولوحات معلومات تفاعلية</p>
+                <a href="{{ url_for('report.reports_index') }}" class="btn btn-info btn-sm">
+                    <i class="fas fa-eye me-1"></i>عرض الإحصائيات
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

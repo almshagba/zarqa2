@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}التقارير{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-chart-bar"></i> تقارير قسم شؤون الموظفين</h4>
+                </div>
+                <div class="card-body">
+                    <!-- إحصائيات عامة -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    <h3>{{ total_employees }}</h3>
+                                    <p>إجمالي موظفي المدارس</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <h3>{{ schools|length }}</h3>
+                                    <p>عدد المدارس</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body text-center">
+                                    <h3>{{ job_stats|length }}</h3>
+                                    <p>عدد الوظائف</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-secondary text-white">
+                                <div class="card-body text-center">
+                                    <h3>{{ subject_stats|length }}</h3>
+                                    <p>عدد المباحث</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- أنواع التقارير -->
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                                    <h5 class="card-title">الموقف الفني</h5>
+                                    <p class="card-text">عرض الزوائد والنواقص في المدارس حسب التخصص والوظيفة</p>
+                                    <a href="{{ url_for('report.technical_position') }}" class="btn btn-primary">
+                                        <i class="fas fa-eye"></i> عرض التقرير
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- باقي التقارير الموجودة -->
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-school fa-3x text-primary mb-3"></i>
+                                    <h5>تقارير حسب المدرسة</h5>
+                                    <p class="text-muted">عرض الموظفين مجمعين حسب المدرسة</p>
+                                    <a href="{{ url_for('report.report_by_school') }}" class="btn btn-primary">عرض التقرير</a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-book fa-3x text-success mb-3"></i>
+                                    <h5>تقارير حسب المبحث</h5>
+                                    <p class="text-muted">عرض الموظفين مجمعين حسب المبحث الدراسي</p>
+                                    <a href="{{ url_for('report.report_by_subject') }}" class="btn btn-success">عرض التقرير</a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-briefcase fa-3x text-warning mb-3"></i>
+                                    <h5>تقارير حسب الوظيفة</h5>
+                                    <p class="text-muted">عرض الموظفين مجمعين حسب الوظيفة</p>
+                                    <a href="{{ url_for('report.report_by_job') }}" class="btn btn-warning">عرض التقرير</a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-list fa-3x text-info mb-3"></i>
+                                    <h5>التقرير الشامل</h5>
+                                    <p class="text-muted">عرض جميع موظفي المدارس</p>
+                                    <a href="{{ url_for('report.comprehensive_report') }}" class="btn btn-info">عرض التقرير</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- إضافة هذا القسم في صفحة التقارير -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-excel text-success me-2"></i>
+                    تصدير البيانات إلى Excel
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('export.export_employee_balances') }}" class="btn btn-success w-100">
+                            <i class="fas fa-download me-2"></i>
+                            تصدير أرصدة الموظفين
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('export.export_leaves_log') }}" class="btn btn-success w-100">
+                            <i class="fas fa-download me-2"></i>
+                            تصدير سجل الإجازات
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('export.export_departures_log') }}" class="btn btn-success w-100">
+                            <i class="fas fa-download me-2"></i>
+                            تصدير سجل المغادرات
+                        </a>
+                    </div>
+                   
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('export.export_converted_departures') }}" class="btn btn-success w-100">
+                            <i class="fas fa-download me-2"></i>
+                            تصدير المغادرات المحولة
+                        </a>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="exportYear" placeholder="السنة">
+                            <button class="btn btn-outline-secondary" type="button" onclick="exportWithYear()">
+                                تصدير بسنة محددة
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// تعيين السنة الحالية تلقائياً
+document.getElementById('exportYear').value = new Date().getFullYear();
+
+function exportWithYear() {
+    const year = document.getElementById('exportYear').value;
+    if (year) {
+        // يمكن إضافة منطق لتصدير البيانات بسنة محددة
+        window.open(`{{ url_for('export.export_leaves_log') }}?year=${year}`, '_blank');
+    }
+}
+</script>{% endblock %}

@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}إضافة عقوبة جديدة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">إضافة عقوبة جديدة</h3>
+                </div>
+                
+                <form method="POST">
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- الرقم الوزاري -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="ministry_number">الرقم الوزاري <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="ministry_number" 
+                                               name="ministry_number" required>
+                                        <button type="button" class="btn btn-outline-secondary" id="search_employee">
+                                            <i class="fas fa-search"></i> بحث
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- اسم الموظف -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="employee_name">اسم الموظف</label>
+                                    <input type="text" class="form-control" id="employee_name" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <!-- نوع العقوبة -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="penalty_type">نوع العقوبة <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="penalty_type" name="penalty_type" required>
+                                        <option value="">اختر نوع العقوبة</option>
+                                        <option value="التنبيه">التنبيه</option>
+                                        <option value="الإنذار">الإنذار</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- المدرسة/القسم -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="school_id">المدرسة/القسم <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="school_id" name="school_id" required>
+                                        <option value="">اختر المدرسة/القسم</option>
+                                        {% for school in schools %}
+                                        <option value="{{ school.id }}">{{ school.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <!-- رقم الكتاب -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="letter_number">رقم الكتاب <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="letter_number" 
+                                           name="letter_number" required>
+                                </div>
+                            </div>
+                            
+                            <!-- تاريخ الكتاب -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="letter_date">تاريخ الكتاب <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="letter_date" 
+                                           name="letter_date" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- ملاحظات -->
+                        <div class="form-group">
+                            <label for="notes">ملاحظات</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> حفظ العقوبة
+                        </button>
+                        <a href="{{ url_for('procedures.procedures_list') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> العودة
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// البحث عن الموظف بالرقم الوزاري
+document.getElementById('search_employee').addEventListener('click', function() {
+    const ministryNumber = document.getElementById('ministry_number').value;
+    
+    if (!ministryNumber) {
+        alert('يرجى إدخال الرقم الوزاري');
+        return;
+    }
+    
+    fetch(`/api/search_employee?ministry_number=${ministryNumber}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('employee_name').value = data.employee.name;
+                
+                // اختيار المدرسة تلقائياً إذا كانت متوفرة
+                if (data.employee.school_id) {
+                    const schoolSelect = document.getElementById('school_id');
+                    schoolSelect.value = data.employee.school_id;
+                }
+            } else {
+                alert(data.message || 'الموظف غير موجود');
+                document.getElementById('employee_name').value = '';
+                document.getElementById('school_id').value = '';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ في البحث');
+        });
+});
+
+// البحث التلقائي عند تغيير الرقم الوزاري
+document.getElementById('ministry_number').addEventListener('blur', function() {
+    document.getElementById('search_employee').click();
+});
+</script>
+{% endblock %}

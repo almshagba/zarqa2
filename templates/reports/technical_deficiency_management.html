@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة النقص الفني{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-cogs"></i> إدارة النقص الفني</h4>
+                </div>
+                <div class="card-body">
+                    <!-- نموذج إضافة نقص جديد -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fas fa-plus"></i> إضافة نقص فني جديد</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('report.add_technical_deficiency') }}">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <label for="school_id" class="form-label">المدرسة *</label>
+                                        <select name="school_id" id="school_id" class="form-select" required>
+                                            <option value="">اختر المدرسة</option>
+                                            {% for school in schools %}
+                                            <option value="{{ school.id }}">{{ school.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="specialization" class="form-label">التخصص *</label>
+                                        <input type="text" name="specialization" id="specialization" class="form-control" list="specializations" required>
+                                        <datalist id="specializations">
+                                            {% for spec in specializations %}
+                                            <option value="{{ spec }}"></option>
+                                            {% endfor %}
+                                        </datalist>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="job_title" class="form-label">الوظيفة *</label>
+                                        <select name="job_title" id="job_title" class="form-select" required>
+                                            <option value="">اختر الوظيفة</option>
+                                            {% for job in jobs %}
+                                            <option value="{{ job }}">{{ job }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="subject" class="form-label">المبحث</label>
+                                        <input type="text" name="subject" id="subject" class="form-control" list="subjects">
+                                        <datalist id="subjects">
+                                            {% for subject in subjects %}
+                                            <option value="{{ subject }}"></option>
+                                            {% endfor %}
+                                        </datalist>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-md-12">
+                                        <label for="notes" class="form-label">ملاحظات</label>
+                                        <textarea name="notes" id="notes" class="form-control" rows="2"></textarea>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-md-12">
+                                        <h6 class="text-primary">تفاصيل النواقص والزوائد</h6>
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-md-3">
+                                        <label for="deficiency_bachelor" class="form-label">نقص بكالوريوس</label>
+                                        <input type="number" name="deficiency_bachelor" id="deficiency_bachelor" class="form-control" min="0" value="0">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="deficiency_diploma" class="form-label">نقص دبلوم</label>
+                                        <input type="number" name="deficiency_diploma" id="deficiency_diploma" class="form-control" min="0" value="0">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="surplus_bachelor" class="form-label">زيادة بكالوريوس</label>
+                                        <input type="number" name="surplus_bachelor" id="surplus_bachelor" class="form-control" min="0" value="0">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="surplus_diploma" class="form-label">زيادة دبلوم</label>
+                                        <input type="number" name="surplus_diploma" id="surplus_diploma" class="form-control" min="0" value="0">
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fas fa-save"></i> إضافة النقص
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- جدول النواقص الحالية -->
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>المدرسة</th>
+                                    <th>المنطقة</th>
+                                    <th>التخصص</th>
+                                    <th>الوظيفة</th>
+                                    <th>المبحث</th>
+                                    <th>نقص بكالوريوس</th>
+                                    <th>نقص دبلوم</th>
+                                    <th>زيادة بكالوريوس</th>
+                                    <th>زيادة دبلوم</th>
+                                    <th>ملاحظات</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for deficiency in deficiencies %}
+                                <tr>
+                                    <td>{{ deficiency.school.name }}</td>
+                                    <td><span class="badge bg-primary">{{ deficiency.school.region or '-' }}</span></td>
+                                    <td>{{ deficiency.specialization }}</td>
+                                    <td>{{ deficiency.job_title }}</td>
+                                    <td>{{ deficiency.subject or '-' }}</td>
+                                    <td><span class="badge bg-danger">{{ deficiency.deficiency_bachelor or 0 }}</span></td>
+                                    <td><span class="badge bg-danger">{{ deficiency.deficiency_diploma or 0 }}</span></td>
+                                    <td><span class="badge bg-success">{{ deficiency.surplus_bachelor or 0 }}</span></td>
+                                    <td><span class="badge bg-success">{{ deficiency.surplus_diploma or 0 }}</span></td>
+                                    <td>{{ deficiency.notes or '-' }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('report.edit_technical_deficiency_page', deficiency_id=deficiency.id) }}" class="btn btn-sm btn-warning" title="تعديل">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form method="POST" action="{{ url_for('report.delete_technical_deficiency', deficiency_id=deficiency.id) }}" style="display:inline;" onsubmit="return window.confirm('هل أنت متأكد من حذف هذا السجل؟\n\nالمدرسة: {{ deficiency.school.name }}\nالتخصص: {{ deficiency.specialization }}\nالوظيفة: {{ deficiency.job_title }}')">
+                                                <button type="submit" class="btn btn-sm btn-danger" title="حذف">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+
+
+
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if not deficiencies %}
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle"></i> لا توجد بيانات نقص فني مسجلة
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

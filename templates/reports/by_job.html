@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}تقرير الموظفين حسب الوظيفة{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-briefcase"></i> تقرير الموظفين حسب الوظيفة</h4>
+                    <a href="{{ url_for('report.reports_index') }}" class="btn btn-dark btn-sm">
+                        <i class="fas fa-arrow-right"></i> العودة للتقارير
+                    </a>
+                </div>
+                <div class="card-body">
+                    <!-- فلتر الوظيفة -->
+                    <form method="GET" class="mb-4">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <select name="job_title" class="form-control" onchange="this.form.submit()">
+                                    <option value="">اختر الوظيفة...</option>
+                                    {% for job in jobs %}
+                                    <option value="{{ job }}" {% if selected_job == job %}selected{% endif %}>
+                                        {{ job }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                {% if selected_job %}
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('report.report_by_job', job_title=selected_job, export='excel') }}" 
+                                       class="btn btn-success">
+                                        <i class="fas fa-file-excel"></i> تصدير Excel
+                                    </a>
+                                    <button type="button" class="btn btn-info" onclick="window.print()">
+                                        <i class="fas fa-print"></i> طباعة
+                                    </button>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </form>
+
+                    {% if selected_job %}
+                    <!-- معلومات التقرير للطباعة -->
+                    <div class="print-report-info text-center mb-4" style="display: none;">
+                        <h4><i class="fas fa-briefcase"></i> تقرير الموظفين حسب الوظيفة</h4>
+                        <h5 class="text-primary">الوظيفة: {{ selected_job }}</h5>
+                        <p><strong>عدد الموظفين:</strong> {{ employees|length }}</p>
+                        <hr>
+                    </div>
+
+                    {% if employees %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>#</th>
+                                    <th>الرقم الوزاري</th>
+                                    <th>الاسم</th>
+                                    <th>الرقم الوطني</th>
+                                    <th>الجنس</th>
+                                    <th>رقم الهاتف</th>
+                                    <th>المدرسة</th>
+                                    <th>المؤهل</th>
+                                    <th>تخصص البكالوريوس</th>
+                                    <th>تخصص الدبلوم العالي</th>
+                                    <th>تخصص الماجستير</th>
+                                    <th>تخصص الدكتوراه</th>
+                                    <th>المبحث الدراسي</th>
+                                    <th>تاريخ التعيين</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for employee in employees %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ employee.ministry_number }}</td>
+                                    <td>{{ employee.name }}</td>
+                                    <td>{{ employee.civil_id }}</td>
+                                    <td>{{ employee.gender }}</td>
+                                    <td>{{ employee.phone_number or '-' }}</td>
+                                    <td>{{ employee.school.name }}</td>
+                                    <td>{{ employee.qualification }}</td>
+                                    <td>{{ employee.bachelor_specialization or '-' }}</td>
+                                    <td>{{ employee.high_diploma_specialization or '-' }}</td>
+                                    <td>{{ employee.masters_specialization or '-' }}</td>
+                                    <td>{{ employee.phd_specialization or '-' }}</td>
+                                    <td>{{ employee.subject or '-' }}</td>
+                                    <td>{{ employee.appointment_date.strftime('%Y-%m-%d') if employee.appointment_date else '-' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> لا توجد موظفين لهذه الوظيفة.
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div class="alert alert-secondary">
+                        <i class="fas fa-info-circle"></i> يرجى اختيار وظيفة لعرض التقرير.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style media="print">
+    .btn, .card-header .btn, form, .alert-info { display: none !important; }
+    .card-header { display: none !important; }
+    
+    /* إظهار معلومات التقرير فقط */
+    .print-report-info { display: block !important; }
+    
+    body { font-size: 12px; }
+    .table { font-size: 10px; }
+    .table th, .table td { padding: 4px !important; }
+    .card { border: none !important; box-shadow: none !important; }
+    .card-body { padding: 0 !important; }
+    @page { margin: 1cm; }
+</style>
+{% endblock %}

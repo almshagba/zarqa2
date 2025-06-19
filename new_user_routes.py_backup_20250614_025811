@@ -1,0 +1,361 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Routes جديدة لإدارة المستخدمين مع الصلاحيات المنظمة
+"""
+
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask_login import login_required, current_user
+from models import db, User
+from utils import log_user_activity
+from werkzeug.security import generate_password_hash
+
+# إنشاء Blueprint
+new_user_bp = Blueprint('new_user', __name__, url_prefix='/new_users')
+
+def check_permission(permission_name):
+    """فحص صلاحية المستخدم"""
+    if current_user.is_admin:
+        return True
+    return current_user.has_permission().get(permission_name, False)
+
+@new_user_bp.route('/')
+@login_required
+def users_list():
+    """عرض قائمة المستخدمين"""
+    if not check_permission('view_users_list'):
+        flash('ليس لديك صلاحية لعرض قائمة المستخدمين', 'error')
+        return redirect(url_for('main.dashboard'))
+    
+    users = User.query.all()
+    return render_template('new_users_list.html', users=users)
+
+@new_user_bp.route('/add', methods=['GET', 'POST'])
+@login_required
+def add_user():
+    """إضافة مستخدم جديد"""
+    if not check_permission('add_new_user'):
+        flash('ليس لديك صلاحية لإضافة مستخدم جديد', 'error')
+        return redirect(url_for('new_user.users_list'))
+    
+    if request.method == 'POST':
+        try:
+            # الحصول على البيانات الأساسية
+            username = request.form.get('username', '').strip()
+            full_name = request.form.get('full_name', '').strip()
+            password = request.form.get('password', '').strip()
+            is_admin = bool(request.form.get('is_admin'))
+            
+            # التحقق من البيانات المطلوبة
+            if not username or not full_name or not password:
+                flash('جميع الحقول مطلوبة', 'error')
+                return render_template('new_user_form.html')
+            
+            # التحقق من عدم وجود اسم المستخدم
+            if User.query.filter_by(username=username).first():
+                flash('اسم المستخدم موجود بالفعل', 'error')
+                return render_template('new_user_form.html')
+            
+            # إنشاء المستخدم الجديد
+            new_user = User(
+                username=username,
+                full_name=full_name,
+                password_hash=generate_password_hash(password),
+                is_admin=is_admin
+            )
+            
+            # إضافة الصلاحيات إذا لم يكن مدير
+            if not is_admin:
+                # Employee permissions
+                new_user.can_view_employees_list = bool(request.form.get('can_view_employees_list'))
+                new_user.can_view_employee_details = bool(request.form.get('can_view_employee_details'))
+                new_user.can_edit_employees_data = bool(request.form.get('can_edit_employees_data'))
+                new_user.can_add_new_employee = bool(request.form.get('can_add_new_employee'))
+                new_user.can_delete_employee = bool(request.form.get('can_delete_employee'))
+                
+                # School permissions
+                new_user.can_view_schools_list = bool(request.form.get('can_view_schools_list'))
+                new_user.can_view_school_details = bool(request.form.get('can_view_school_details'))
+                new_user.can_edit_schools_data = bool(request.form.get('can_edit_schools_data'))
+                new_user.can_add_new_school = bool(request.form.get('can_add_new_school'))
+                new_user.can_delete_school = bool(request.form.get('can_delete_school'))
+                
+                # Leave permissions
+                new_user.can_view_leaves_list = bool(request.form.get('can_view_leaves_list'))
+                new_user.can_view_leave_details = bool(request.form.get('can_view_leave_details'))
+                new_user.can_edit_leaves_data = bool(request.form.get('can_edit_leaves_data'))
+                new_user.can_add_new_leave = bool(request.form.get('can_add_new_leave'))
+                new_user.can_delete_leave = bool(request.form.get('can_delete_leave'))
+                new_user.can_manage_leave_balances = bool(request.form.get('can_manage_leave_balances'))
+                
+                # Departure permissions
+                new_user.can_view_departures_list = bool(request.form.get('can_view_departures_list'))
+                new_user.can_view_departure_details = bool(request.form.get('can_view_departure_details'))
+                new_user.can_edit_departures_data = bool(request.form.get('can_edit_departures_data'))
+                new_user.can_add_new_departure = bool(request.form.get('can_add_new_departure'))
+                new_user.can_delete_departure = bool(request.form.get('can_delete_departure'))
+                
+                # Transfer permissions
+                new_user.can_view_transfers_list = bool(request.form.get('can_view_transfers_list'))
+                new_user.can_view_transfer_details = bool(request.form.get('can_view_transfer_details'))
+                new_user.can_edit_transfers_data = bool(request.form.get('can_edit_transfers_data'))
+                new_user.can_add_new_transfer = bool(request.form.get('can_add_new_transfer'))
+                new_user.can_delete_transfer = bool(request.form.get('can_delete_transfer'))
+                
+                # Report permissions
+                new_user.can_view_employee_reports = bool(request.form.get('can_view_employee_reports'))
+                new_user.can_view_school_reports = bool(request.form.get('can_view_school_reports'))
+                new_user.can_view_comprehensive_reports = bool(request.form.get('can_view_comprehensive_reports'))
+                
+                # Export permissions
+                new_user.can_export_employee_data = bool(request.form.get('can_export_employee_data'))
+                new_user.can_export_school_data = bool(request.form.get('can_export_school_data'))
+                new_user.can_export_report_data = bool(request.form.get('can_export_report_data'))
+                
+                # User management permissions
+                new_user.can_view_users_list = bool(request.form.get('can_view_users_list'))
+                new_user.can_add_new_user = bool(request.form.get('can_add_new_user'))
+                new_user.can_manage_user_permissions = bool(request.form.get('can_manage_user_permissions'))
+                
+                # Form permissions
+                new_user.can_view_forms_list = bool(request.form.get('can_view_forms_list'))
+                new_user.can_edit_forms_data = bool(request.form.get('can_edit_forms_data'))
+                new_user.can_add_new_form = bool(request.form.get('can_add_new_form'))
+                new_user.can_delete_form = bool(request.form.get('can_delete_form'))
+                
+                # System permissions
+                new_user.can_view_system_logs = bool(request.form.get('can_view_system_logs'))
+                new_user.can_backup_database = bool(request.form.get('can_backup_database'))
+                new_user.can_manage_system_settings = bool(request.form.get('can_manage_system_settings'))
+            
+            # حفظ المستخدم
+            db.session.add(new_user)
+            db.session.commit()
+            
+            # تسجيل النشاط
+            log_user_activity(
+                user_id=current_user.id,
+                action='add',
+                module='users',
+                description=f'إضافة مستخدم جديد: {username}',
+                target_id=new_user.id,
+                target_type='User'
+            )
+            
+            flash(f'تم إضافة المستخدم {username} بنجاح', 'success')
+            return redirect(url_for('new_user.users_list'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'خطأ في إضافة المستخدم: {str(e)}', 'error')
+            return render_template('new_user_form.html')
+    
+    return render_template('new_user_form.html')
+
+@new_user_bp.route('/edit/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def edit_user(user_id):
+    """تعديل مستخدم"""
+    if not check_permission('manage_user_permissions'):
+        flash('ليس لديك صلاحية لتعديل المستخدمين', 'error')
+        return redirect(url_for('new_user.users_list'))
+    
+    user = User.query.get_or_404(user_id)
+    
+    if request.method == 'POST':
+        try:
+            # الحصول على البيانات الأساسية
+            username = request.form.get('username', '').strip()
+            full_name = request.form.get('full_name', '').strip()
+            password = request.form.get('password', '').strip()
+            is_admin = bool(request.form.get('is_admin'))
+            
+            # التحقق من البيانات المطلوبة
+            if not username or not full_name:
+                flash('اسم المستخدم والاسم الكامل مطلوبان', 'error')
+                return render_template('new_user_form.html', user=user)
+            
+            # التحقق من عدم تكرار اسم المستخدم
+            existing_user = User.query.filter_by(username=username).first()
+            if existing_user and existing_user.id != user_id:
+                flash('اسم المستخدم موجود بالفعل', 'error')
+                return render_template('new_user_form.html', user=user)
+            
+            # تحديث البيانات الأساسية
+            user.username = username
+            user.full_name = full_name
+            user.is_admin = is_admin
+            
+            # تحديث كلمة المرور إذا تم إدخالها
+            if password:
+                user.password_hash = generate_password_hash(password)
+            
+            # تحديث الصلاحيات إذا لم يكن مدير
+            if not is_admin:
+                # Employee permissions
+                user.can_view_employees_list = bool(request.form.get('can_view_employees_list'))
+                user.can_view_employee_details = bool(request.form.get('can_view_employee_details'))
+                user.can_edit_employees_data = bool(request.form.get('can_edit_employees_data'))
+                user.can_add_new_employee = bool(request.form.get('can_add_new_employee'))
+                user.can_delete_employee = bool(request.form.get('can_delete_employee'))
+                
+                # School permissions
+                user.can_view_schools_list = bool(request.form.get('can_view_schools_list'))
+                user.can_view_school_details = bool(request.form.get('can_view_school_details'))
+                user.can_edit_schools_data = bool(request.form.get('can_edit_schools_data'))
+                user.can_add_new_school = bool(request.form.get('can_add_new_school'))
+                user.can_delete_school = bool(request.form.get('can_delete_school'))
+                
+                # Leave permissions
+                user.can_view_leaves_list = bool(request.form.get('can_view_leaves_list'))
+                user.can_view_leave_details = bool(request.form.get('can_view_leave_details'))
+                user.can_edit_leaves_data = bool(request.form.get('can_edit_leaves_data'))
+                user.can_add_new_leave = bool(request.form.get('can_add_new_leave'))
+                user.can_delete_leave = bool(request.form.get('can_delete_leave'))
+                user.can_manage_leave_balances = bool(request.form.get('can_manage_leave_balances'))
+                
+                # Departure permissions
+                user.can_view_departures_list = bool(request.form.get('can_view_departures_list'))
+                user.can_view_departure_details = bool(request.form.get('can_view_departure_details'))
+                user.can_edit_departures_data = bool(request.form.get('can_edit_departures_data'))
+                user.can_add_new_departure = bool(request.form.get('can_add_new_departure'))
+                user.can_delete_departure = bool(request.form.get('can_delete_departure'))
+                
+                # Transfer permissions
+                user.can_view_transfers_list = bool(request.form.get('can_view_transfers_list'))
+                user.can_view_transfer_details = bool(request.form.get('can_view_transfer_details'))
+                user.can_edit_transfers_data = bool(request.form.get('can_edit_transfers_data'))
+                user.can_add_new_transfer = bool(request.form.get('can_add_new_transfer'))
+                user.can_delete_transfer = bool(request.form.get('can_delete_transfer'))
+                
+                # Report permissions
+                user.can_view_employee_reports = bool(request.form.get('can_view_employee_reports'))
+                user.can_view_school_reports = bool(request.form.get('can_view_school_reports'))
+                user.can_view_comprehensive_reports = bool(request.form.get('can_view_comprehensive_reports'))
+                
+                # Export permissions
+                user.can_export_employee_data = bool(request.form.get('can_export_employee_data'))
+                user.can_export_school_data = bool(request.form.get('can_export_school_data'))
+                user.can_export_report_data = bool(request.form.get('can_export_report_data'))
+                
+                # User management permissions
+                user.can_view_users_list = bool(request.form.get('can_view_users_list'))
+                user.can_add_new_user = bool(request.form.get('can_add_new_user'))
+                user.can_manage_user_permissions = bool(request.form.get('can_manage_user_permissions'))
+                
+                # Form permissions
+                user.can_view_forms_list = bool(request.form.get('can_view_forms_list'))
+                user.can_edit_forms_data = bool(request.form.get('can_edit_forms_data'))
+                user.can_add_new_form = bool(request.form.get('can_add_new_form'))
+                user.can_delete_form = bool(request.form.get('can_delete_form'))
+                
+                # System permissions
+                user.can_view_system_logs = bool(request.form.get('can_view_system_logs'))
+                user.can_backup_database = bool(request.form.get('can_backup_database'))
+                user.can_manage_system_settings = bool(request.form.get('can_manage_system_settings'))
+            
+            # حفظ التغييرات
+            db.session.commit()
+            
+            # تسجيل النشاط
+            log_user_activity(
+                user_id=current_user.id,
+                action='edit',
+                module='users',
+                description=f'تعديل المستخدم: {username}',
+                target_id=user.id,
+                target_type='User'
+            )
+            
+            flash(f'تم تحديث المستخدم {username} بنجاح', 'success')
+            return redirect(url_for('new_user.users_list'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'خطأ في تحديث المستخدم: {str(e)}', 'error')
+            return render_template('new_user_form.html', user=user)
+    
+    return render_template('new_user_form.html', user=user)
+
+@new_user_bp.route('/delete/<int:user_id>', methods=['POST'])
+@login_required
+def delete_user(user_id):
+    """حذف مستخدم"""
+    if not check_permission('manage_user_permissions'):
+        return jsonify({'success': False, 'message': 'ليس لديك صلاحية لحذف المستخدمين'})
+    
+    try:
+        user = User.query.get_or_404(user_id)
+        
+        # منع حذف المدير الحالي
+        if user.id == current_user.id:
+            return jsonify({'success': False, 'message': 'لا يمكنك حذف حسابك الخاص'})
+        
+        username = user.username
+        
+        # تسجيل النشاط قبل الحذف
+        log_user_activity(
+            user_id=current_user.id,
+            action='delete',
+            module='users',
+            description=f'حذف المستخدم: {username}',
+            target_id=user.id,
+            target_type='User'
+        )
+        
+        # حذف المستخدم
+        db.session.delete(user)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': f'تم حذف المستخدم {username} بنجاح'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'خطأ في حذف المستخدم: {str(e)}'})
+
+@new_user_bp.route('/permissions/<int:user_id>')
+@login_required
+def view_permissions(user_id):
+    """عرض صلاحيات مستخدم"""
+    if not check_permission('view_users_list'):
+        flash('ليس لديك صلاحية لعرض صلاحيات المستخدمين', 'error')
+        return redirect(url_for('new_user.users_list'))
+    
+    user = User.query.get_or_404(user_id)
+    permissions = user.has_permission()
+    
+    return render_template('user_permissions_view.html', user=user, permissions=permissions)
+
+@new_user_bp.route('/toggle_status/<int:user_id>', methods=['POST'])
+@login_required
+def toggle_user_status(user_id):
+    """تفعيل/إلغاء تفعيل مستخدم"""
+    if not check_permission('manage_user_permissions'):
+        return jsonify({'success': False, 'message': 'ليس لديك صلاحية لإدارة المستخدمين'})
+    
+    try:
+        user = User.query.get_or_404(user_id)
+        
+        # منع تعديل حالة المدير الحالي
+        if user.id == current_user.id:
+            return jsonify({'success': False, 'message': 'لا يمكنك تعديل حالة حسابك الخاص'})
+        
+        # تبديل حالة التفعيل (يمكن إضافة حقل is_active للمستخدم)
+        # user.is_active = not user.is_active
+        # db.session.commit()
+        
+        # تسجيل النشاط
+        log_user_activity(
+            user_id=current_user.id,
+            action='toggle_status',
+            module='users',
+            description=f'تغيير حالة المستخدم: {user.username}',
+            target_id=user.id,
+            target_type='User'
+        )
+        
+        return jsonify({'success': True, 'message': f'تم تحديث حالة المستخدم {user.username}'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'خطأ في تحديث حالة المستخدم: {str(e)}'})

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}إضافة نموذج جديد{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">إضافة نموذج جديد</h3>
+            <a href="{{ url_for('main.form_templates') }}" class="btn btn-light">
+                <i class="fas fa-arrow-right"></i> العودة للنماذج
+            </a>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="name" class="form-label">اسم النموذج <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="name" name="name" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="description" class="form-label">وصف النموذج</label>
+                    <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="file" class="form-label">الملف <span class="text-danger">*</span></label>
+                    <input type="file" class="form-control" id="file" name="file" required accept=".doc,.docx,.pdf,.jpg,.jpeg,.png">
+                    <div class="form-text">الملفات المسموح بها: Word (.doc, .docx)، PDF (.pdf)، صور (.jpg, .jpeg, .png)</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="file_type" class="form-label">نوع الملف <span class="text-danger">*</span></label>
+                    <select class="form-select" id="file_type" name="file_type" required>
+                        <option value="" selected disabled>اختر نوع الملف</option>
+                        <option value="Word">ملف Word</option>
+                        <option value="PDF">ملف PDF</option>
+                        <option value="Image">صورة</option>
+                    </select>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> حفظ النموذج
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

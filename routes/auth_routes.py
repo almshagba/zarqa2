@@ -1,0 +1,399 @@
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from database import db
+from models import User
+from utils import log_user_activity
+from functools import wraps
+
+auth = Blueprint('auth', __name__)
+
+# دالة للتحقق من صلاحيات المسؤول
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('يرجى تسجيل الدخول أولاً', 'danger')
+            return redirect(url_for('auth.login'))
+        
+        user = User.query.get(session['user_id'])
+        if not user or not user.is_admin:
+            flash('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'danger')
+            return redirect(url_for('main.index'))
+        
+        return f(*args, **kwargs)
+    return decorated_function
+
+# دالة للتحقق من تسجيل الدخول
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('يرجى تسجيل الدخول أولاً', 'danger')
+            return redirect(url_for('auth.login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# دالة للتحقق من صلاحية معينة
+def permission_required(permission):
+    """ديكوريتر للتحقق من الصلاحيات"""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            # التحقق من تسجيل الدخول
+            if 'user_id' not in session:
+                flash('يرجى تسجيل الدخول أولاً', 'danger')
+                return redirect(url_for('auth.login'))
+            
+            # الحصول على المستخدم
+            user = User.query.get(session['user_id'])
+            if not user:
+                flash('المستخدم غير موجود', 'danger')
+                return redirect(url_for('auth.login'))
+            
+            # التحقق من الصلاحية
+            try:
+                has_perm = user.has_permission(permission)
+                if not has_perm:
+                    flash('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'danger')
+                    return redirect(url_for('main.index'))
+            except Exception as e:
+                print(f"خطأ في فحص الصلاحية {permission}: {e}")
+                flash('خطأ في فحص الصلاحيات', 'danger')
+                return redirect(url_for('main.index'))
+            
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+@auth.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        user = User.query.filter_by(username=username).first()
+        
+        if user and user.check_password(password):
+            session['user_id'] = user.id
+            session['username'] = user.username
+            session['is_admin'] = user.is_admin
+            
+            # تسجيل نشاط تسجيل الدخول
+            log_user_activity(
+                user_id=user.id,
+                action='تسجيل دخول',
+                module='المصادقة',
+                description=f'تسجيل دخول ناجح للمستخدم {user.username}'
+            )
+            
+            flash('تم تسجيل الدخول بنجاح', 'success')
+            return redirect(url_for('main.index'))
+        else:
+            # تسجيل محاولة تسجيل دخول فاشلة
+            if user:
+                log_user_activity(
+                    user_id=user.id,
+                    action='محاولة تسجيل دخول فاشلة',
+                    module='المصادقة',
+                    description=f'محاولة تسجيل دخول بكلمة مرور خاطئة للمستخدم {username}',
+                    status='failed',
+                    error_message='كلمة مرور خاطئة'
+                )
+            
+            flash('اسم المستخدم أو كلمة المرور غير صحيحة', 'danger')
+    
+    return render_template('login.html')
+
+# تسجيل الخروج
+@auth.route('/logout')
+def logout():
+    # تسجيل نشاط تسجيل الخروج قبل مسح الجلسة
+    if 'user_id' in session:
+        log_user_activity(
+            user_id=session['user_id'],
+            action='تسجيل خروج',
+            module='المصادقة',
+            description=f'تسجيل خروج للمستخدم {session.get("username", "غير معروف")}'
+        )
+    
+    session.clear()
+    flash('تم تسجيل الخروج بنجاح', 'success')
+    return redirect(url_for('auth.login'))
+
+# تغيير كلمة المرور
+@auth.route('/change_password', methods=['GET', 'POST'])
+def change_password():
+    if 'user_id' not in session:
+        flash('يرجى تسجيل الدخول أولاً', 'danger')
+        return redirect(url_for('auth.login'))
+    
+    user = User.query.get(session['user_id'])
+    
+    if request.method == 'POST':
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if not user.check_password(current_password):
+            # تسجيل محاولة تغيير كلمة مرور فاشلة
+            log_user_activity(
+                user_id=user.id,
+                action='محاولة تغيير كلمة مرور فاشلة',
+                module='المصادقة',
+                description='محاولة تغيير كلمة المرور بكلمة مرور حالية خاطئة',
+                status='failed',
+                error_message='كلمة المرور الحالية غير صحيحة'
+            )
+            flash('كلمة المرور الحالية غير صحيحة', 'danger')
+        elif new_password != confirm_password:
+            flash('كلمة المرور الجديدة وتأكيدها غير متطابقين', 'danger')
+        else:
+            user.set_password(new_password)
+            db.session.commit()
+            
+            # تسجيل نشاط تغيير كلمة المرور
+            log_user_activity(
+                user_id=user.id,
+                action='تغيير كلمة مرور',
+                module='المصادقة',
+                description='تم تغيير كلمة المرور بنجاح'
+            )
+            
+            flash('تم تغيير كلمة المرور بنجاح', 'success')
+            return redirect(url_for('main.index'))
+    
+    return render_template('change_password.html')
+
+# إدارة المستخدمين
+@auth.route('/users')
+@permission_required('can_manage_users')
+def users():
+    users = User.query.all()
+    return render_template('users.html', users=users)
+
+# إضافة مستخدم جديد
+@auth.route('/users/add', methods=['GET', 'POST'])
+@permission_required('can_manage_users')
+def add_user():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        full_name = request.form.get('full_name')
+        is_admin = 'is_admin' in request.form
+        
+        # التحقق من عدم وجود مستخدم بنفس اسم المستخدم
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            flash('اسم المستخدم موجود بالفعل', 'danger')
+        else:
+            user = User(
+                username=username, 
+                full_name=full_name,
+                is_admin=is_admin,
+                # الصلاحيات الأساسية
+                can_manage_employees='can_manage_employees' in request.form,
+                can_manage_schools='can_manage_schools' in request.form,
+                can_manage_leaves='can_manage_leaves' in request.form,
+                can_manage_departures='can_manage_departures' in request.form,
+                can_manage_transfers='can_manage_transfers' in request.form,
+                can_view_reports='can_view_reports' in request.form,
+                can_export_data='can_export_data' in request.form,
+                can_manage_users='can_manage_users' in request.form,
+                can_manage_forms='can_manage_forms' in request.form,
+                can_process_monthly_departures='can_process_monthly_departures' in request.form,
+                can_backup_database='can_backup_database' in request.form,
+                
+                # صلاحيات الموظفين المفصلة
+                can_view_employees='can_view_employees' in request.form,
+                can_add_employees='can_add_employees' in request.form,
+                can_edit_employees='can_edit_employees' in request.form,
+                can_delete_employees='can_delete_employees' in request.form,
+                can_view_employee_details='can_view_employee_details' in request.form,
+                
+                # صلاحيات الإجازات المفصلة
+                can_view_leaves='can_view_leaves' in request.form,
+                can_add_leaves='can_add_leaves' in request.form,
+                can_edit_leaves='can_edit_leaves' in request.form,
+                can_delete_leaves='can_delete_leaves' in request.form,
+                can_approve_leaves='can_approve_leaves' in request.form,
+                can_manage_leave_balances='can_manage_leave_balances' in request.form,
+                
+                # صلاحيات المغادرات المفصلة
+                can_view_departures='can_view_departures' in request.form,
+                can_add_departures='can_add_departures' in request.form,
+                can_edit_departures='can_edit_departures' in request.form,
+                can_delete_departures='can_delete_departures' in request.form,
+                can_convert_departures='can_convert_departures' in request.form,
+                
+                # صلاحيات التقارير المفصلة
+                can_view_employee_reports='can_view_employee_reports' in request.form,
+                can_view_school_reports='can_view_school_reports' in request.form,
+                can_view_leave_reports='can_view_leave_reports' in request.form,
+                can_view_departure_reports='can_view_departure_reports' in request.form,
+                can_view_comprehensive_reports='can_view_comprehensive_reports' in request.form,
+                
+                # صلاحيات التصدير المفصلة
+                can_export_employees='can_export_employees' in request.form,
+                can_export_leaves='can_export_leaves' in request.form,
+                can_export_departures='can_export_departures' in request.form,
+                can_export_balances='can_export_balances' in request.form,
+                can_export_reports='can_export_reports' in request.form,
+                
+                # صلاحيات إدارية إضافية
+                can_view_system_logs='can_view_system_logs' in request.form,
+                can_manage_system_settings='can_manage_system_settings' in request.form,
+                can_view_statistics='can_view_statistics' in request.form,
+                
+                # صلاحيات خاصة بالمدارس
+                can_view_own_school_only='can_view_own_school_only' in request.form,
+                can_manage_school_employees='can_manage_school_employees' in request.form,
+                can_view_school_statistics='can_view_school_statistics' in request.form
+            )
+            user.set_password(password)
+            db.session.add(user)
+            db.session.commit()
+            
+            # تسجيل العملية في سجلات المستخدمين
+            log_user_activity(
+                user_id=session.get('user_id'),
+                action='إضافة',
+                module='المستخدمين',
+                description=f'تم إضافة المستخدم: {username} ({full_name})',
+                target_id=user.id,
+                target_type='مستخدم'
+            )
+            
+            flash('تمت إضافة المستخدم بنجاح', 'success')
+            return redirect(url_for('auth.users'))
+    
+    return render_template('user_form.html', user=None)
+
+# تعديل مستخدم
+@auth.route('/users/edit/<int:id>', methods=['GET', 'POST'])
+@permission_required('can_manage_users')
+def edit_user(id):
+    user = User.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        full_name = request.form.get('full_name')
+        is_admin = 'is_admin' in request.form
+        
+        # التحقق من عدم وجود مستخدم آخر بنفس اسم المستخدم
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user and existing_user.id != id:
+            flash('اسم المستخدم موجود بالفعل', 'danger')
+        else:
+            user.username = username
+            user.full_name = full_name
+            user.is_admin = is_admin
+            
+            # الصلاحيات الأساسية
+            user.can_manage_employees = 'can_manage_employees' in request.form
+            user.can_manage_schools = 'can_manage_schools' in request.form
+            user.can_manage_leaves = 'can_manage_leaves' in request.form
+            user.can_manage_departures = 'can_manage_departures' in request.form
+            user.can_manage_transfers = 'can_manage_transfers' in request.form
+            user.can_view_reports = 'can_view_reports' in request.form
+            user.can_export_data = 'can_export_data' in request.form
+            user.can_manage_users = 'can_manage_users' in request.form
+            user.can_manage_forms = 'can_manage_forms' in request.form
+            user.can_process_monthly_departures = 'can_process_monthly_departures' in request.form
+            user.can_backup_database = 'can_backup_database' in request.form
+            
+            # صلاحيات الموظفين المفصلة
+            user.can_view_employees = 'can_view_employees' in request.form
+            user.can_add_employees = 'can_add_employees' in request.form
+            user.can_edit_employees = 'can_edit_employees' in request.form
+            user.can_delete_employees = 'can_delete_employees' in request.form
+            user.can_view_employee_details = 'can_view_employee_details' in request.form
+            
+            # صلاحيات الإجازات المفصلة
+            user.can_view_leaves = 'can_view_leaves' in request.form
+            user.can_add_leaves = 'can_add_leaves' in request.form
+            user.can_edit_leaves = 'can_edit_leaves' in request.form
+            user.can_delete_leaves = 'can_delete_leaves' in request.form
+            user.can_approve_leaves = 'can_approve_leaves' in request.form
+            user.can_manage_leave_balances = 'can_manage_leave_balances' in request.form
+            
+            # صلاحيات المغادرات المفصلة
+            user.can_view_departures = 'can_view_departures' in request.form
+            user.can_add_departures = 'can_add_departures' in request.form
+            user.can_edit_departures = 'can_edit_departures' in request.form
+            user.can_delete_departures = 'can_delete_departures' in request.form
+            user.can_convert_departures = 'can_convert_departures' in request.form
+            
+            # صلاحيات التقارير المفصلة
+            user.can_view_employee_reports = 'can_view_employee_reports' in request.form
+            user.can_view_school_reports = 'can_view_school_reports' in request.form
+            user.can_view_leave_reports = 'can_view_leave_reports' in request.form
+            user.can_view_departure_reports = 'can_view_departure_reports' in request.form
+            user.can_view_comprehensive_reports = 'can_view_comprehensive_reports' in request.form
+            
+            # صلاحيات التصدير المفصلة
+            user.can_export_employees = 'can_export_employees' in request.form
+            user.can_export_leaves = 'can_export_leaves' in request.form
+            user.can_export_departures = 'can_export_departures' in request.form
+            user.can_export_balances = 'can_export_balances' in request.form
+            user.can_export_reports = 'can_export_reports' in request.form
+            
+            # صلاحيات إدارية إضافية
+            user.can_view_system_logs = 'can_view_system_logs' in request.form
+            user.can_manage_system_settings = 'can_manage_system_settings' in request.form
+            user.can_view_statistics = 'can_view_statistics' in request.form
+            
+            # صلاحيات خاصة بالمدارس
+            user.can_view_own_school_only = 'can_view_own_school_only' in request.form
+            user.can_manage_school_employees = 'can_manage_school_employees' in request.form
+            user.can_view_school_statistics = 'can_view_school_statistics' in request.form
+            
+            if password:  # تغيير كلمة المرور فقط إذا تم إدخالها
+                user.set_password(password)
+            db.session.commit()
+            
+            # تسجيل العملية في سجلات المستخدمين
+            log_user_activity(
+                user_id=session.get('user_id'),
+                action='تعديل',
+                module='المستخدمين',
+                description=f'تم تعديل المستخدم: {username} ({full_name})',
+                target_id=user.id,
+                target_type='مستخدم'
+            )
+            
+            flash('تم تحديث المستخدم بنجاح', 'success')
+            return redirect(url_for('auth.users'))
+    
+    return render_template('user_form.html', user=user)
+
+# حذف مستخدم
+@auth.route('/users/delete/<int:id>', methods=['POST'])
+@permission_required('can_manage_users')
+def delete_user(id):
+    user = User.query.get_or_404(id)
+    
+    # لا يمكن حذف المستخدم الحالي
+    if user.id == session.get('user_id'):
+        flash('لا يمكن حذف المستخدم الحالي', 'danger')
+        return redirect(url_for('auth.users'))
+    
+    # حفظ بيانات المستخدم قبل الحذف للتسجيل
+    username = user.username
+    full_name = user.full_name
+    user_id = user.id
+    
+    db.session.delete(user)
+    db.session.commit()
+    
+    # تسجيل العملية في سجلات المستخدمين
+    log_user_activity(
+        user_id=session.get('user_id'),
+        action='حذف',
+        module='المستخدمين',
+        description=f'تم حذف المستخدم: {username} ({full_name})',
+        target_id=user_id,
+        target_type='مستخدم'
+    )
+    
+    flash('تم حذف المستخدم بنجاح', 'success')
+    return redirect(url_for('auth.users'))

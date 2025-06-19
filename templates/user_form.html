@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">{% if user %}تعديل المستخدم{% else %}إضافة مستخدم جديد{% endif %}</h5>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">اسم المستخدم</label>
+                        <input type="text" class="form-control" id="username" name="username" value="{{ user.username if user else '' }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="full_name" class="form-label">الاسم الكامل</label>
+                        <input type="text" class="form-control" id="full_name" name="full_name" value="{{ user.full_name if user else '' }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">{% if user %}كلمة المرور (اتركها فارغة إذا لم ترغب بتغييرها){% else %}كلمة المرور{% endif %}</label>
+                        <input type="password" class="form-control" id="password" name="password" {% if not user %}required{% endif %}>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="is_admin" name="is_admin" {% if user and user.is_admin %}checked{% endif %}>
+                        <label class="form-check-label" for="is_admin">حساب مدير (جميع الصلاحيات)</label>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <h6 class="mb-3">صلاحيات النظام الأساسية:</h6>
+                    
+                    <div class="mb-2 form-check">
+                        <input type="checkbox" class="form-check-input permission-check" id="can_manage_employees" name="can_manage_employees" {% if user and user.can_manage_employees %}checked{% endif %}>
+                        <label class="form-check-label" for="can_manage_employees">إدارة الموظفين</label>
+                    </div>
+                    
+                    <div class="mb-2 form-check">
+                        <input type="checkbox" class="form-check-input permission-check" id="can_manage_schools" name="can_manage_schools" {% if user and user.can_manage_schools %}checked{% endif %}>
+                        <label class="form-check-label" for="can_manage_schools">إدارة المدارس</label>
+                    </div>
+                    
+                    <div class="mb-2 form-check">
+                        <input type="checkbox" class="form-check-input permission-check" id="can_manage_leaves" name="can_manage_leaves" {% if user and user.can_manage_leaves %}checked{% endif %}>
+                        <label class="form-check-label" for="can_manage_leaves">إدارة الإجازات</label>
+                    </div>
+                    
+                    <div class="mb-2 form-check">
+                        <input type="checkbox" class="form-check-input permission-check" id="can_manage_departures" name="can_manage_departures" {% if user and user.can_manage_departures %}checked{% endif %}>
+                        <label class="form-check-label" for="can_manage_departures">إدارة المغادرات</label>
+                    </div>
+                    
+                    <div class="mb-2 form-check">
+                        <input type="checkbox" class="form-check-input permission-check" id="can_manage_transfers" name="can_manage_transfers" {% if user and user.can_manage_transfers %}checked{% endif %}>
+                        <label class="form-check-label" for="can_manage_transfers">إدارة النقل</label>
+                    </div>
+                    
+                    <div class="mb-2 form-check">
+                        <input type="checkbox" class="form-check-input permission-check" id="can_view_reports" name="can_view_reports" {% if user and user.can_view_reports %}checked{% endif %}>
+                        <label class="form-check-label" for="can_view_reports">عرض التقارير</label>
+                    </div>
+                    
+                    <div class="mb-2 form-check">
+                        <input type="checkbox" class="form-check-input permission-check" id="can_export_data" name="can_export_data" {% if user and user.can_export_data %}checked{% endif %}>
+                        <label class="form-check-label" for="can_export_data">تصدير البيانات</label>
+                    </div>
+                    
+                    <div class="mb-2 form-check">
+                        <input type="checkbox" class="form-check-input permission-check" id="can_manage_users" name="can_manage_users" {% if user and user.can_manage_users %}checked{% endif %}>
+                        <label class="form-check-label" for="can_manage_users">إدارة المستخدمين</label>
+                    </div>
+                    
+                    <div class="mb-2 form-check">
+                        <input type="checkbox" class="form-check-input permission-check" id="can_manage_forms" name="can_manage_forms" {% if user and user.can_manage_forms %}checked{% endif %}>
+                        <label class="form-check-label" for="can_manage_forms">إدارة النماذج</label>
+                    </div>
+                    
+                    <div class="mb-2 form-check">
+                        <input type="checkbox" class="form-check-input permission-check" id="can_process_monthly_departures" name="can_process_monthly_departures" {% if user and user.can_process_monthly_departures %}checked{% endif %}>
+                        <label class="form-check-label" for="can_process_monthly_departures">معالجة المغادرات الشهرية</label>
+                    </div>
+                    
+                    <div class="mb-2 form-check">
+                        <input type="checkbox" class="form-check-input permission-check" id="can_backup_database" name="can_backup_database" {% if user and user.can_backup_database %}checked{% endif %}>
+                        <label class="form-check-label" for="can_backup_database">نسخ احتياطي للقاعدة</label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- الصلاحيات المفصلة -->
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <h6 class="mb-3">الصلاحيات المفصلة:</h6>
+                    
+                    <!-- صلاحيات الموظفين -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">صلاحيات إدارة الموظفين</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_view_employees" name="can_view_employees" {% if user and user.can_view_employees %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_view_employees">عرض الموظفين</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_add_employees" name="can_add_employees" {% if user and user.can_add_employees %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_add_employees">إضافة موظفين</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_edit_employees" name="can_edit_employees" {% if user and user.can_edit_employees %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_edit_employees">تعديل الموظفين</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_delete_employees" name="can_delete_employees" {% if user and user.can_delete_employees %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_delete_employees">حذف الموظفين</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_view_employee_details" name="can_view_employee_details" {% if user and user.can_view_employee_details %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_view_employee_details">عرض تفاصيل الموظف</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- صلاحيات الإجازات -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">صلاحيات إدارة الإجازات</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_view_leaves" name="can_view_leaves" {% if user and user.can_view_leaves %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_view_leaves">عرض الإجازات</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_add_leaves" name="can_add_leaves" {% if user and user.can_add_leaves %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_add_leaves">إضافة إجازات</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_edit_leaves" name="can_edit_leaves" {% if user and user.can_edit_leaves %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_edit_leaves">تعديل الإجازات</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_delete_leaves" name="can_delete_leaves" {% if user and user.can_delete_leaves %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_delete_leaves">حذف الإجازات</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_approve_leaves" name="can_approve_leaves" {% if user and user.can_approve_leaves %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_approve_leaves">الموافقة على الإجازات</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_manage_leave_balances" name="can_manage_leave_balances" {% if user and user.can_manage_leave_balances %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_manage_leave_balances">إدارة أرصدة الإجازات</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- صلاحيات المغادرات -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">صلاحيات إدارة المغادرات</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_view_departures" name="can_view_departures" {% if user and user.can_view_departures %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_view_departures">عرض المغادرات</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_add_departures" name="can_add_departures" {% if user and user.can_add_departures %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_add_departures">إضافة مغادرات</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_edit_departures" name="can_edit_departures" {% if user and user.can_edit_departures %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_edit_departures">تعديل المغادرات</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_delete_departures" name="can_delete_departures" {% if user and user.can_delete_departures %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_delete_departures">حذف المغادرات</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_convert_departures" name="can_convert_departures" {% if user and user.can_convert_departures %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_convert_departures">تحويل المغادرات</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- صلاحيات التقارير -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">صلاحيات التقارير</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_view_employee_reports" name="can_view_employee_reports" {% if user and user.can_view_employee_reports %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_view_employee_reports">تقارير الموظفين</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_view_school_reports" name="can_view_school_reports" {% if user and user.can_view_school_reports %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_view_school_reports">تقارير المدارس</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_view_leave_reports" name="can_view_leave_reports" {% if user and user.can_view_leave_reports %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_view_leave_reports">تقارير الإجازات</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_view_departure_reports" name="can_view_departure_reports" {% if user and user.can_view_departure_reports %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_view_departure_reports">تقارير المغادرات</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_view_comprehensive_reports" name="can_view_comprehensive_reports" {% if user and user.can_view_comprehensive_reports %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_view_comprehensive_reports">التقارير الشاملة</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- صلاحيات التصدير -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">صلاحيات التصدير</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_export_employees" name="can_export_employees" {% if user and user.can_export_employees %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_export_employees">تصدير الموظفين</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_export_leaves" name="can_export_leaves" {% if user and user.can_export_leaves %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_export_leaves">تصدير الإجازات</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_export_departures" name="can_export_departures" {% if user and user.can_export_departures %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_export_departures">تصدير المغادرات</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_export_balances" name="can_export_balances" {% if user and user.can_export_balances %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_export_balances">تصدير الأرصدة</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_export_reports" name="can_export_reports" {% if user and user.can_export_reports %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_export_reports">تصدير التقارير</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- صلاحيات إدارية إضافية -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">صلاحيات إدارية إضافية</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_view_system_logs" name="can_view_system_logs" {% if user and user.can_view_system_logs %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_view_system_logs">عرض سجلات النظام</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_manage_system_settings" name="can_manage_system_settings" {% if user and user.can_manage_system_settings %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_manage_system_settings">إدارة إعدادات النظام</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_view_statistics" name="can_view_statistics" {% if user and user.can_view_statistics %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_view_statistics">عرض الإحصائيات</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- صلاحيات خاصة بالمدارس -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">صلاحيات خاصة بالمدارس</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_view_own_school_only" name="can_view_own_school_only" {% if user and user.can_view_own_school_only %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_view_own_school_only">عرض المدرسة الخاصة فقط</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_manage_school_employees" name="can_manage_school_employees" {% if user and user.can_manage_school_employees %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_manage_school_employees">إدارة موظفي المدرسة</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input permission-check" id="can_view_school_statistics" name="can_view_school_statistics" {% if user and user.can_view_school_statistics %}checked{% endif %}>
+                                        <label class="form-check-label" for="can_view_school_statistics">عرض إحصائيات المدرسة</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{{ url_for('auth.users') }}" class="btn btn-secondary">إلغاء</a>
+                <button type="submit" class="btn btn-primary">حفظ</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// عند تحديد "مدير"، تفعيل جميع الصلاحيات
+document.getElementById('is_admin').addEventListener('change', function() {
+    const permissionChecks = document.querySelectorAll('.permission-check');
+    if (this.checked) {
+        permissionChecks.forEach(check => {
+            check.checked = true;
+            check.disabled = true;
+        });
+    } else {
+        permissionChecks.forEach(check => {
+            check.disabled = false;
+        });
+    }
+});
+
+// تشغيل الدالة عند تحميل الصفحة إذا كان المستخدم مدير
+if (document.getElementById('is_admin').checked) {
+    document.getElementById('is_admin').dispatchEvent(new Event('change'));
+}
+</script>
+{% endblock %}

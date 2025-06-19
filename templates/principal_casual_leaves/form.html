@@ -1,0 +1,564 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{% if is_edit %}
+تعديل إجازة عرضية لمدير مدرسة
+{% else %}
+إضافة إجازة عرضية لمدير مدرسة
+{% endif %}
+{% endblock %}
+
+{% block head_extra %}
+<!-- إضافة ملفات CSS الخاصة بـ select2 -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    .select2-container {
+        width: 100% !important;
+    }
+    .select2-container--default .select2-selection--single {
+        height: 38px;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 36px;
+        padding-right: 12px;
+        padding-left: 12px;
+        text-align: right;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px;
+    }
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: #0d6efd;
+    }
+    .select2-dropdown {
+        border: 1px solid #ced4da;
+    }
+    .select2-container--default .select2-search--dropdown .select2-search__field {
+        text-align: right;
+        direction: rtl;
+    }
+    .select2-results__option {
+        text-align: right;
+        direction: rtl;
+    }
+    .search-result {
+        margin-top: 10px;
+    }
+    .hidden {
+        display: none;
+    }
+    #principals_list .list-group {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+    .principal-item {
+        cursor: pointer;
+        text-align: right;
+    }
+    .principal-item:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3>
+                {% if is_edit %}
+                <i class="fas fa-edit"></i> تعديل إجازة عرضية لمدير مدرسة
+                {% else %}
+                <i class="fas fa-plus-circle"></i> إضافة إجازة عرضية لمدير مدرسة
+                {% endif %}
+            </h3>
+        </div>
+        <div class="card-body">
+            <!-- حقل البحث بالرقم الوزاري -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label for="search_term" class="form-label">البحث بالاسم أو الرقم الوزاري</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="search_term" placeholder="أدخل اسم أو الرقم الوزاري لمدير المدرسة">
+                        <button class="btn btn-outline-primary" type="button" id="search_principal_btn">
+                            <i class="fas fa-search"></i> بحث
+                        </button>
+                    </div>
+                    <div id="search_result" class="search-result mt-2"></div>
+                    <div id="principals_list" class="mt-2"></div>
+                </div>
+            </div>
+
+            <form id="leaveForm" method="post" action="{% if is_edit %}{{ url_for('principal_leaves.edit_principal_casual_leave', id=leave.id) }}{% else %}{{ url_for('principal_leaves.add_principal_casual_leave') }}{% endif %}" onsubmit="return validateForm();">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="employee_id" class="form-label">مدير المدرسة <span class="text-danger">*</span></label>
+                        <select class="form-control" id="employee_id" name="employee_id" required>
+                            <option value="">-- اختر مدير المدرسة --</option>
+                            {% for principal in principals %}
+                            <option value="{{ principal.id }}" {% if leave and leave.employee_id == principal.id %}selected{% endif %}>
+                                {{ principal.name }} ({{ principal.ministry_number }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="school_id" class="form-label">المدرسة <span class="text-danger">*</span></label>
+                        <select class="form-control" id="school_id" name="school_id" required>
+                            <option value="">-- اختر المدرسة --</option>
+                            {% for school in schools %}
+                            <option value="{{ school.id }}" {% if leave and leave.school_id == school.id %}selected{% endif %}>
+                                {{ school.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="school_letter_number" class="form-label">رقم كتاب المدرسة <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="school_letter_number" name="school_letter_number" value="{{ leave.school_letter_number if leave else '' }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="school_letter_date" class="form-label">تاريخ كتاب المدرسة <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="school_letter_date" name="school_letter_date" value="{{ leave.school_letter_date.strftime('%Y-%m-%d') if leave and leave.school_letter_date else '' }}" required>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="start_date" class="form-label">تاريخ بداية الإجازة <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" value="{{ leave.start_date.strftime('%Y-%m-%d') if leave and leave.start_date else '' }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="end_date" class="form-label">تاريخ نهاية الإجازة <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" value="{{ leave.end_date.strftime('%Y-%m-%d') if leave and leave.end_date else '' }}" required>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="leave_reason" class="form-label">سبب الإجازة <span class="text-danger">*</span></label>
+                    <select class="form-control" id="leave_reason" name="leave_reason" required>
+                        <option value="">-- اختر سبب الإجازة --</option>
+                        <optgroup label="وفاة أحد الأقارب">
+                            <option value="وفاة الزوجة (5 ايام)" {% if leave and leave.leave_reason == "وفاة الزوجة (5 ايام)" %}selected{% endif %}>وفاة الزوجة (5 ايام)</option>
+                            <option value="وفاة الزوج (5 ايام)" {% if leave and leave.leave_reason == "وفاة الزوج (5 ايام)" %}selected{% endif %}>وفاة الزوج (5 ايام)</option>
+                            <option value="وفاة أحد الأقارب من الدرجة الأولى (ثلاثة ايام)" {% if leave and leave.leave_reason == "وفاة أحد الأقارب من الدرجة الأولى (ثلاثة ايام)" %}selected{% endif %}>من الدرجة الأولى (ثلاثة ايام)</option>
+                            <option value="وفاة أحد الأقارب من الدرجة الثانية (يومين ايام)" {% if leave and leave.leave_reason == "وفاة أحد الأقارب من الدرجة الثانية (يومين ايام)" %}selected{% endif %}>من الدرجة الثانية (يومين ايام)</option>
+                            <option value="وفاة أحد الأقارب من الدرجة الثالثة (يوم ايام)" {% if leave and leave.leave_reason == "وفاة أحد الأقارب من الدرجة الثالثة (يوم ايام)" %}selected{% endif %}>من الدرجة الثالثة (يوم ايام)</option>
+                        </optgroup>
+                        <option value="أبوة (ثلاثة ايام)" {% if leave and leave.leave_reason == "أبوة (ثلاثة ايام)" %}selected{% endif %}>أبوة (ثلاثة ايام)</option>
+                        <option value="عرضية" {% if leave and leave.leave_reason == "عرضية" %}selected{% endif %}>عرضية</option>
+                        <option value="أخرى" {% if leave and leave.leave_reason and leave.leave_reason not in ["وفاة الزوجة (5 ايام)", "وفاة الزوج (5 ايام)", "وفاة أحد الأقارب من الدرجة الأولى (ثلاثة ايام)", "وفاة أحد الأقارب من الدرجة الثانية (يومين ايام)", "وفاة أحد الأقارب من الدرجة الثالثة (يوم ايام)", "أبوة (ثلاثة ايام)", "عرضية"] %}selected{% endif %}>أخرى</option>
+                    </select>
+                    <div id="other_reason_container" class="mt-2 {% if not leave or leave.leave_reason in ["وفاة الزوجة (5 ايام)", "وفاة الزوج (5 ايام)", "وفاة أحد الأقارب من الدرجة الأولى (ثلاثة ايام)", "وفاة أحد الأقارب من الدرجة الثانية (يومين ايام)", "وفاة أحد الأقارب من الدرجة الثالثة (يوم ايام)", "أبوة (ثلاثة ايام)", "عرضية"] %}d-none{% endif %}">
+                        <textarea class="form-control" id="other_reason" name="other_reason" rows="3" placeholder="يرجى تحديد سبب الإجازة">{{ leave.leave_reason if leave and leave.leave_reason and leave.leave_reason not in ["وفاة الزوجة (5 ايام)", "وفاة الزوج (5 ايام)", "وفاة أحد الأقارب من الدرجة الأولى (ثلاثة ايام)", "وفاة أحد الأقارب من الدرجة الثانية (يومين ايام)", "وفاة أحد الأقارب من الدرجة الثالثة (يوم ايام)", "أبوة (ثلاثة ايام)", "عرضية"] else '' }}</textarea>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="notes" class="form-label">ملاحظات إضافية</label>
+                    <textarea class="form-control" id="notes" name="notes" rows="2">{{ leave.notes if leave else '' }}</textarea>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('principal_leaves.principal_casual_leaves_list') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> العودة
+                    </a>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        {% if is_edit %}
+                        <i class="fas fa-save"></i> حفظ التغييرات
+                        {% else %}
+                        <i class="fas fa-plus-circle"></i> إضافة الإجازة
+                        {% endif %}
+                    </button>
+                </div>
+                
+                <!-- زر بديل للإرسال للتحقق من المشكلة -->
+                <div class="mt-3 text-center">
+                    <button type="button" class="btn btn-outline-success" id="alternativeSubmitBtn">
+                        <i class="fas fa-paper-plane"></i> إرسال بديل
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- إضافة مكتبة select2 -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchBtn = document.getElementById('search_principal_btn');
+        const searchInput = document.getElementById('search_term');
+        const searchResult = document.getElementById('search_result');
+        const employeeSelect = document.getElementById('employee_id');
+        const schoolSelect = document.getElementById('school_id');
+        
+        console.log('DOM loaded, initializing form');
+        console.log('Form action:', document.getElementById('leaveForm').action);
+        
+        // تعيين تاريخ اليوم كقيمة افتراضية لتاريخ كتاب المدرسة
+        document.getElementById('school_letter_date').valueAsDate = new Date();
+        
+        // وظيفة التحقق من النموذج
+        window.validateForm = function() {
+            console.log('Validating form before submission');
+            
+            // التأكد من أن حقل المدرسة غير معطل عند التقديم
+            schoolSelect.disabled = false;
+            
+            // التحقق من صحة النموذج
+            const form = document.getElementById('leaveForm');
+            const requiredFields = ['employee_id', 'school_id', 'school_letter_number', 'school_letter_date', 'leave_reason', 'start_date', 'end_date'];
+            let isValid = true;
+            let missingFields = [];
+            
+            requiredFields.forEach(field => {
+                const input = form.elements[field];
+                console.log(`Checking field ${field}: ${input.value}`);
+                if (!input.value) {
+                    isValid = false;
+                    missingFields.push(field);
+                    console.log(`Missing required field: ${field}`);
+                }
+            });
+            
+            // إذا كان سبب الإجازة هو "أخرى"، تحقق من حقل السبب الآخر
+            if (form.elements['leave_reason'].value === 'أخرى' && !form.elements['other_reason'].value) {
+                isValid = false;
+                missingFields.push('other_reason');
+                console.log('Missing other reason field');
+            }
+            
+            if (!isValid) {
+                alert('يرجى ملء جميع الحقول المطلوبة: ' + missingFields.join(', '));
+                console.log('Form validation failed, submission prevented');
+                return false;
+            }
+            
+            console.log('Form validation passed, submitting form');
+            
+            // إضافة تأخير قصير لإظهار رسالة التحميل
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> جاري الإرسال...';
+            
+            // إضافة سجل لبيانات النموذج قبل الإرسال
+            console.log('Form data to be submitted:');
+            console.log('employee_id:', form.elements['employee_id'].value);
+            console.log('school_id:', form.elements['school_id'].value);
+            console.log('school_letter_number:', form.elements['school_letter_number'].value);
+            console.log('school_letter_date:', form.elements['school_letter_date'].value);
+            console.log('leave_reason:', form.elements['leave_reason'].value);
+            console.log('start_date:', form.elements['start_date'].value);
+            console.log('end_date:', form.elements['end_date'].value);
+            
+            return true;
+        };
+        
+        // البحث عن مدير المدرسة بالاسم أو الرقم الوزاري
+        searchBtn.addEventListener('click', function() {
+            const searchTerm = searchInput.value.trim();
+            if (!searchTerm) {
+                searchResult.innerHTML = '<div class="alert alert-warning">الرجاء إدخال الاسم أو الرقم الوزاري</div>';
+                return;
+            }
+            
+            // إظهار مؤشر التحميل
+            searchResult.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">جاري التحميل...</span></div><p class="mt-2">جاري البحث...</p></div>';
+            document.getElementById('principals_list').innerHTML = '';
+            
+            // إرسال طلب AJAX للبحث عن المدير
+            fetch(`/api/principal_search?search_term=${encodeURIComponent(searchTerm)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // تم العثور على مدراء
+                        const principals = data.principals;
+                        
+                        if (principals.length === 0) {
+                            searchResult.innerHTML = '<div class="alert alert-warning">لم يتم العثور على نتائج</div>';
+                            return;
+                        }
+                        
+                        searchResult.innerHTML = `<div class="alert alert-success">تم العثور على ${principals.length} نتيجة</div>`;
+                        
+                        // عرض النتائج في قائمة
+                        const principalsList = document.getElementById('principals_list');
+                        principalsList.innerHTML = '<div class="list-group">';
+                        
+                        principals.forEach(principal => {
+                            const schoolInfo = principal.school_name ? ` - ${principal.school_name}` : '';
+                            principalsList.innerHTML += `
+                                <button type="button" class="list-group-item list-group-item-action principal-item" 
+                                    data-id="${principal.id}" 
+                                    data-name="${principal.name}" 
+                                    data-ministry="${principal.ministry_number}"
+                                    data-school-id="${principal.school_id || ''}">
+                                    <strong>${principal.name}</strong> (${principal.ministry_number})${schoolInfo}
+                                </button>
+                            `;
+                        });
+                        
+                        principalsList.innerHTML += '</div>';
+                        
+                        // إضافة مستمع أحداث للعناصر المضافة
+                        const principalItems = document.querySelectorAll('.principal-item');
+                        principalItems.forEach(item => {
+                            item.addEventListener('click', function() {
+                                const principalId = this.getAttribute('data-id');
+                                const schoolId = this.getAttribute('data-school-id');
+                                
+                                // تحديد المدير في القائمة المنسدلة
+                                for (let i = 0; i < employeeSelect.options.length; i++) {
+                                    if (employeeSelect.options[i].value == principalId) {
+                                        employeeSelect.selectedIndex = i;
+                                        break;
+                                    }
+                                }
+                                
+                                // إذا كان للمدير مدرسة، قم بتحديدها
+                                if (schoolId) {
+                                    for (let i = 0; i < schoolSelect.options.length; i++) {
+                                        if (schoolSelect.options[i].value == schoolId) {
+                                            schoolSelect.selectedIndex = i;
+                                            // تعطيل حقل المدرسة لأن المدير مرتبط بمدرسة محددة
+                                            schoolSelect.disabled = true;
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    // إعادة تفعيل حقل المدرسة إذا لم يكن المدير مرتبط بمدرسة
+                                    schoolSelect.disabled = false;
+                                }
+                                
+                                // إخفاء قائمة النتائج بعد الاختيار
+                                principalsList.innerHTML = '';
+                                searchResult.innerHTML = `<div class="alert alert-success">تم اختيار المدير: ${this.getAttribute('data-name')}</div>`;
+                            });
+                        });
+                        
+                    } else {
+                        // لم يتم العثور على مدراء
+                        searchResult.innerHTML = `<div class="alert alert-danger">${data.message || 'لم يتم العثور على مدراء مدارس مطابقين لكلمة البحث'}</div>`;
+                        document.getElementById('principals_list').innerHTML = '';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    searchResult.innerHTML = '<div class="alert alert-danger">حدث خطأ أثناء البحث</div>';
+                    document.getElementById('principals_list').innerHTML = '';
+                });
+        });
+        
+        // البحث عند الضغط على Enter
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchBtn.click();
+            }
+        });
+        
+        // عند تغيير مدير المدرسة يدوياً
+        employeeSelect.addEventListener('change', function() {
+            // إعادة تفعيل حقل المدرسة
+            schoolSelect.disabled = false;
+            
+            // إذا تم اختيار مدير مدرسة، نحاول الحصول على بيانات المدرسة
+            const principalId = this.value;
+            if (principalId) {
+                // إظهار مؤشر التحميل
+                searchResult.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">جاري التحميل...</span></div><p class="mt-2">جاري تحميل بيانات المدرسة...</p></div>';
+                
+                // استخدام API البحث بالرقم الوزاري للحصول على بيانات المدير
+                // نحتاج أولاً للحصول على الرقم الوزاري من النص المعروض في الخيار المحدد
+                const selectedOption = this.options[this.selectedIndex];
+                const optionText = selectedOption.textContent;
+                const ministryNumberMatch = optionText.match(/\(([^)]+)\)/);
+                
+                if (ministryNumberMatch && ministryNumberMatch[1]) {
+                    const ministryNumber = ministryNumberMatch[1];
+                    
+                    fetch(`/api/principal_search?ministry_number=${ministryNumber}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log("API response for principal change:", data);
+                            
+                            if (data.success && data.principal.school_id) {
+                                // تحديد المدرسة تلقائياً
+                                let foundSchool = false;
+                                for (let i = 0; i < schoolSelect.options.length; i++) {
+                                    if (schoolSelect.options[i].value == data.principal.school_id) {
+                                        schoolSelect.selectedIndex = i;
+                                        foundSchool = true;
+                                        // تعطيل حقل المدرسة
+                                        schoolSelect.disabled = true;
+                                        break;
+                                    }
+                                }
+                                
+                                if (foundSchool) {
+                                    searchResult.innerHTML = `<div class="alert alert-success">تم تحديد المدرسة تلقائياً: ${data.principal.school_name}</div>`;
+                                } else {
+                                    searchResult.innerHTML = `<div class="alert alert-warning">لم يتم العثور على المدرسة في القائمة (رقم المدرسة: ${data.principal.school_id})</div>`;
+                                }
+                            } else if (data.success) {
+                                searchResult.innerHTML = `<div class="alert alert-warning">لم يتم تحديد مدرسة لهذا المدير</div>`;
+                            } else {
+                                searchResult.innerHTML = `<div class="alert alert-danger">${data.message || 'حدث خطأ أثناء تحميل بيانات المدرسة'}</div>`;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            searchResult.innerHTML = '<div class="alert alert-danger">حدث خطأ أثناء تحميل بيانات المدرسة</div>';
+                        });
+                } else {
+                    // إذا لم نتمكن من استخراج الرقم الوزاري، نمسح نتيجة البحث
+                    searchResult.innerHTML = '';
+                }
+            } else {
+                // إذا لم يتم اختيار مدير، نمسح نتيجة البحث
+                searchResult.innerHTML = '';
+            }
+        });
+        
+        // التحقق من تواريخ الإجازة
+        const startDateInput = document.getElementById('start_date');
+        const endDateInput = document.getElementById('end_date');
+        
+        function validateDates() {
+            if (startDateInput.value && endDateInput.value) {
+                const startDate = new Date(startDateInput.value);
+                const endDate = new Date(endDateInput.value);
+                
+                if (startDate > endDate) {
+                    endDateInput.setCustomValidity('تاريخ النهاية يجب أن يكون بعد تاريخ البداية');
+                } else {
+                    endDateInput.setCustomValidity('');
+                }
+            }
+        }
+        
+        startDateInput.addEventListener('change', validateDates);
+        endDateInput.addEventListener('change', validateDates);
+        
+        // لا حاجة لمستمع الحدث هنا لأننا نستخدم onsubmit في العنصر form
+
+        // Leave reason change handler
+        $('#leave_reason').change(function() {
+            const selectedReason = $(this).val();
+            const predefinedReasons = [
+                "وفاة الزوجة",
+                "وفاة الزوج",
+                "وفاة أحد الأقارب من الدرجة الأولى",
+                "وفاة أحد الأقارب من الدرجة الثانية",
+                "وفاة أحد الأقارب من الدرجة الثالثة",
+                "أبوة",
+                "عرضية"
+            ];
+            
+            if (selectedReason === "أخرى") {
+                $('#other_reason_container').removeClass('d-none');
+                $('#other_reason').prop('required', true);
+            } else {
+                $('#other_reason_container').addClass('d-none');
+                $('#other_reason').prop('required', false);
+                
+                // تعيين مدة الإجازة تلقائياً بناءً على السبب المختار
+                const startDate = new Date($('#start_date').val());
+                if (startDate && !isNaN(startDate.getTime())) {
+                    let endDate = new Date(startDate);
+                    
+                    // تحديد عدد الأيام بناءً على السبب
+                    if (selectedReason === "وفاة الزوجة") {
+                        endDate.setDate(startDate.getDate() + 9); // 10 أيام (يوم البداية + 9)
+                    } else if (selectedReason === "وفاة الزوج") {
+                        endDate.setDate(startDate.getDate() + 29); // 30 يوم (يوم البداية + 29)
+                    } else if (selectedReason === "وفاة أحد الأقارب من الدرجة الأولى" || selectedReason === "أبوة") {
+                        endDate.setDate(startDate.getDate() + 2); // 3 أيام (يوم البداية + 2)
+                    } else if (selectedReason === "وفاة أحد الأقارب من الدرجة الثانية") {
+                        endDate.setDate(startDate.getDate() + 1); // يومان (يوم البداية + 1)
+                    } else if (selectedReason === "وفاة أحد الأقارب من الدرجة الثالثة") {
+                        // يوم واحد، تاريخ البداية هو نفسه تاريخ النهاية
+                    } else if (selectedReason === "عرضية") {
+                        // لا تحديد مدة محددة للإجازة العرضية
+                    }
+                    
+                    // تنسيق التاريخ بالشكل YYYY-MM-DD
+                    const formattedDate = endDate.toISOString().split('T')[0];
+                    $('#end_date').val(formattedDate);
+                }
+            }
+        });
+        
+        // تحديث مدة الإجازة عند تغيير تاريخ البداية
+        $('#start_date').change(function() {
+            // إذا كان هناك سبب محدد، قم بتحديث تاريخ النهاية
+            const selectedReason = $('#leave_reason').val();
+            if (selectedReason && selectedReason !== "أخرى") {
+                $('#leave_reason').trigger('change');
+            }
+        });
+
+        // إضافة وظيفة للزر البديل
+        document.getElementById('alternativeSubmitBtn').addEventListener('click', function() {
+            console.log('Alternative submit button clicked');
+            
+            // التأكد من أن حقل المدرسة غير معطل
+            schoolSelect.disabled = false;
+            
+            // إرسال النموذج باستخدام طريقة بديلة
+            const form = document.getElementById('leaveForm');
+            
+            // إنشاء كائن FormData
+            const formData = new FormData(form);
+            
+            // تحويل FormData إلى كائن JSON
+            const jsonData = {};
+            formData.forEach((value, key) => {
+                jsonData[key] = value;
+            });
+            
+            // عرض البيانات التي سيتم إرسالها
+            console.log('JSON data to be submitted:', jsonData);
+            
+            // إرسال البيانات باستخدام fetch API
+            fetch('{{ url_for("principal_leaves.api_create_principal_leave") }}', {
+                method: 'POST',
+                body: JSON.stringify(jsonData),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                
+                if (data.success) {
+                    alert('تم إضافة الإجازة العرضية بنجاح');
+                    window.location.href = '{{ url_for("principal_leaves.principal_casual_leaves_list") }}';
+                } else {
+                    // إظهار رسالة الخطأ
+                    alert('حدث خطأ: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ أثناء إرسال النموذج: ' + error.message);
+            });
+        });
+    });
+</script>
+{% endblock %}

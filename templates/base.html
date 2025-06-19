@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام شؤون الموظفين</title>
+    <!-- Bootstrap RTL CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- إضافة مكتبات إضافية حسب الصفحة -->
+    {% block head_extra %}{% endblock %}
+    
+    <!-- أنماط الطباعة -->
+    <style>
+        .header-logo {
+            max-height: 80px;
+            margin-right: 10px;
+        }
+        .header-title {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header-title h2, .header-title h4 {
+            margin: 5px 0;
+        }
+        @media print {
+            /* إخفاء العناصر غير المطلوبة عند الطباعة */
+            .navbar, .btn, footer, form, .no-print {
+                display: none !important;
+            }
+            
+            /* تنسيق الصفحة للطباعة */
+            @page {
+                size: A4 landscape;
+                margin: 1cm;
+            }
+            
+            /* تنسيق المحتوى */
+            .container {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            
+            body {
+                font-size: 12pt;
+                background-color: white !important;
+                color: black !important;
+                font-family: 'Amiri', Arial, sans-serif !important;
+            }
+            
+            /* إزالة حدود البطاقات وتغيير لون الرأس */
+            .card {
+                border: none !important;
+                box-shadow: none !important;
+            }
+            
+            .card-header {
+                background-color: #f8f9fa !important;
+                color: #000 !important;
+                border-bottom: 1px solid #ddd !important;
+                padding: 10px !important;
+            }
+            
+            /* تنسيق الجدول للطباعة */
+            .table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                page-break-inside: auto !important;
+            }
+            
+            .table th, .table td {
+                border: 1px solid #ddd !important;
+                padding: 6px !important;
+                font-size: 10pt !important;
+                page-break-inside: avoid !important;
+                white-space: nowrap !important;
+            }
+            
+            .table th {
+                background-color: #f2f2f2 !important;
+                font-weight: bold !important;
+            }
+            
+            /* إظهار ترويسة الطباعة */
+            .print-header {
+                display: block !important;
+                text-align: center;
+                margin-bottom: 20px;
+                border-bottom: 2px solid #000;
+                padding-bottom: 10px;
+            }
+            
+            .print-header h2 {
+                margin: 0;
+                font-size: 18pt;
+                font-weight: bold;
+            }
+            
+            .print-header h3 {
+                margin: 5px 0;
+                font-size: 16pt;
+            }
+            
+            .print-header h4 {
+                margin: 5px 0;
+                font-size: 14pt;
+            }
+            
+            /* تنسيق الصفحة للطباعة الأفقية إذا كان الجدول كبيرًا */
+            .landscape-print {
+                width: 100%;
+            }
+            
+            /* تصغير حجم الخط في الجداول الكبيرة */
+            .table-compact th, .table-compact td {
+                font-size: 9pt !important;
+                padding: 4px !important;
+            }
+            
+            /* تحسين عرض الجداول الكبيرة */
+            .table-responsive {
+                overflow: visible !important;
+            }
+            
+            /* تجنب فواصل الصفحات داخل الصفوف */
+            tr, td, th, thead, tbody {
+                page-break-inside: avoid !important;
+            }
+            
+            /* إضافة رقم الصفحة */
+            .page-number:after {
+                content: counter(page);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header with Logo and Titles -->
+    <div class="container mt-3 header-title">
+        <div class="d-flex justify-content-center align-items-center">
+            <img src="{{ url_for('static', filename='images/moe_logo.png') }}" alt="شعار وزارة التربية والتعليم" class="header-logo">
+        </div>
+        <h2>المملكة الأردنية الهاشمية</h2>
+        <h4>وزارة التربية والتعليم</h4>
+        <h4>مديرية تربية الزرقاء الثانية</h4>
+        <h4>قسم شؤون الموظفين</h4>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">
+                <i class="fas fa-home"></i> نظام شؤون الموظفين
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'main.index' else '' }}" href="{{ url_for('main.index') }}">
+                            <i class="fas fa-tachometer-alt"></i> الرئيسية
+                        </a>
+                    </li>
+                    {% if current_user and (current_user.has_permission('can_view_employees') or current_user.has_permission('can_manage_employees')) %}
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if 'employee' in request.endpoint else '' }}" href="{{ url_for('employee.employees') }}">
+                            <i class="fas fa-users"></i> الموظفين
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if current_user and (current_user.has_permission('can_view_employees') or current_user.has_permission('can_manage_employees')) %}
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'employee.directorate_employees' else '' }}" href="{{ url_for('employee.directorate_employees') }}">
+                            <i class="fas fa-user-tie"></i> موظفي المديرية
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if current_user and current_user.has_permission('can_manage_schools') %}
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if 'school' in request.endpoint else '' }}" href="{{ url_for('school.schools') }}">
+                            <i class="fas fa-school"></i> المدارس
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if current_user and current_user.has_permission('can_manage_transfers') %}
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if 'transfers' in request.endpoint else '' }}" href="{{ url_for('main.transfers_list') }}">
+                            <i class="fas fa-exchange-alt"></i> النقل
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if current_user and (current_user.has_permission('can_view_leaves') or current_user.has_permission('can_manage_leaves') or current_user.has_permission('can_view_departures') or current_user.has_permission('can_manage_departures')) %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {{ 'active' if 'leave' in request.endpoint else '' }}" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-calendar-alt"></i> الإجازات والمغادرات
+                        </a>
+                        <ul class="dropdown-menu">
+                            {% if current_user.has_permission('can_view_leaves') or current_user.has_permission('can_manage_leaves') %}
+                            <li><a class="dropdown-item" href="{{ url_for('leave.leaves') }}">
+                                <i class="fas fa-calendar-check"></i> الإجازات
+                            </a></li>
+                            {% endif %}
+                            {% if current_user.has_permission('can_view_leaves') %}
+                            <li><a class="dropdown-item" href="{{ url_for('principal_leaves.principal_casual_leaves_list') }}">
+                                <i class="fas fa-user-tie"></i> الإجازات العرضية للمدراء
+                            </a></li>
+                            {% endif %}
+                            {% if current_user.has_permission('can_view_departures') or current_user.has_permission('can_manage_departures') %}
+                            <li><a class="dropdown-item" href="{{ url_for('leave.departures') }}">
+                                <i class="fas fa-clock"></i> المغادرات
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('leave.converted_departures') }}">
+                                <i class="fas fa-sync-alt"></i> المغادرات المحولة
+                            </a></li>
+                            {% endif %}
+                            {% if current_user.has_permission('can_manage_leave_balances') %}
+                            <li><a class="dropdown-item" href="{{ url_for('leave.leave_balances') }}">
+                                <i class="fas fa-balance-scale"></i> أرصدة الإجازات
+                            </a></li>
+                            {% endif %}
+                            {% if current_user.has_permission('can_manage_departures') %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('leave.process_monthly_departures') }}">
+                                <i class="fas fa-calendar-plus"></i> ترحيل المغادرات الشهري
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('leave.departures_log') }}">
+                                <i class="fas fa-list-alt"></i> سجل المغادرات
+                            </a></li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                    {% endif %}
+                    {% if current_user and (current_user.has_permission('can_view_reports') or current_user.has_permission('can_view_employee_reports') or current_user.has_permission('can_view_school_reports') or current_user.has_permission('can_view_leave_reports') or current_user.has_permission('can_view_departure_reports') or current_user.has_permission('can_view_comprehensive_reports')) %}
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if 'report' in request.endpoint else '' }}" href="{{ url_for('report.reports_index') }}">
+                            <i class="fas fa-chart-bar"></i> التقارير
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if current_user and current_user.has_permission('can_manage_forms') %}
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'main.form_templates' else '' }}" href="{{ url_for('main.form_templates') }}">
+                            <i class="fas fa-file-alt"></i> نماذج قسم الشؤون
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if current_user %}
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if 'procedures' in request.endpoint else '' }}" href="{{ url_for('procedures.procedures_list') }}">
+                            <i class="fas fa-gavel"></i> الإجراءات
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+                
+                <!-- قائمة المستخدم -->
+                <ul class="navbar-nav">
+                    {% if session.get('user_id') %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('report.technical_position') }}">
+                            <i class="fas fa-chart-line"></i> الموقف الفني
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle"></i> {{ session.get('username') }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            {% if session.get('is_admin') %}
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('auth.users') }}">
+                                    <i class="fas fa-users-cog"></i> إدارة المستخدمين
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('admin.view_logs') }}">
+                                    <i class="fas fa-history"></i> سجلات المستخدمين
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% endif %}
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('auth.change_password') }}">
+                                    <i class="fas fa-key"></i> تغيير كلمة المرور
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.login') }}">
+                            <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- JavaScript إضافي -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>

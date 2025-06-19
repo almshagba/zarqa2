@@ -1,0 +1,409 @@
+{% extends "base.html" %}
+
+{% block title %}صلاحيات المستخدم - {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-key"></i>
+                        صلاحيات المستخدم: {{ user.full_name }}
+                        <small class="text-muted">({{ user.username }})</small>
+                    </h4>
+                    <div>
+                        <a href="{{ url_for('new_user.users_list') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-right"></i>
+                            العودة للقائمة
+                        </a>
+                        {% if current_user.has_permission().get('manage_user_permissions') %}
+                        <a href="{{ url_for('new_user.edit_user', user_id=user.id) }}" class="btn btn-warning">
+                            <i class="fas fa-edit"></i>
+                            تعديل الصلاحيات
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <h6><i class="fas fa-user"></i> معلومات المستخدم</h6>
+                                <p><strong>اسم المستخدم:</strong> {{ user.username }}</p>
+                                <p><strong>الاسم الكامل:</strong> {{ user.full_name }}</p>
+                                <p><strong>نوع الحساب:</strong> 
+                                    {% if user.is_admin %}
+                                    <span class="badge bg-danger"><i class="fas fa-crown"></i> مدير</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary"><i class="fas fa-user"></i> مستخدم</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <h6><i class="fas fa-chart-pie"></i> إحصائيات الصلاحيات</h6>
+                                <p><strong>إجمالي الصلاحيات:</strong> {{ total_permissions }}</p>
+                                <p><strong>الصلاحيات المفعلة:</strong> 
+                                    <span class="badge bg-success">{{ enabled_permissions }}</span>
+                                </p>
+                                <p><strong>الصلاحيات المعطلة:</strong> 
+                                    <span class="badge bg-danger">{{ disabled_permissions }}</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if user.is_admin %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-crown"></i>
+                        <strong>مدير النظام:</strong> هذا المستخدم لديه جميع الصلاحيات تلقائياً.
+                    </div>
+                    {% else %}
+                    
+                    <div class="permissions-content">
+                        <!-- صلاحيات الموظفين -->
+                        <div class="permission-category">
+                            <h5 class="category-title">
+                                <i class="fas fa-users"></i>
+                                إدارة الموظفين
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="permission-item {{ 'permission-enabled' if permissions.view_employees else 'permission-disabled' }}">
+                                        <i class="fas {{ 'fa-check' if permissions.view_employees else 'fa-times' }}"></i>
+                                        مشاهدة الموظفين
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="permission-item {{ 'permission-enabled' if permissions.edit_employees else 'permission-disabled' }}">
+                                        <i class="fas {{ 'fa-check' if permissions.edit_employees else 'fa-times' }}"></i>
+                                        تعديل الموظفين
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- صلاحيات المدارس -->
+                        <div class="permission-category">
+                            <h5 class="category-title">
+                                <i class="fas fa-school"></i>
+                                إدارة المدارس
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="permission-item {{ 'permission-enabled' if permissions.view_schools else 'permission-disabled' }}">
+                                        <i class="fas {{ 'fa-check' if permissions.view_schools else 'fa-times' }}"></i>
+                                        مشاهدة المدارس
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="permission-item {{ 'permission-enabled' if permissions.edit_schools else 'permission-disabled' }}">
+                                        <i class="fas {{ 'fa-check' if permissions.edit_schools else 'fa-times' }}"></i>
+                                        تعديل المدارس
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- صلاحيات الإجازات -->
+                        <div class="permission-category">
+                            <h5 class="category-title">
+                                <i class="fas fa-calendar-alt"></i>
+                                إدارة الإجازات
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="permission-item {{ 'permission-enabled' if permissions.view_leaves else 'permission-disabled' }}">
+                                        <i class="fas {{ 'fa-check' if permissions.view_leaves else 'fa-times' }}"></i>
+                                        مشاهدة الإجازات
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="permission-item {{ 'permission-enabled' if permissions.edit_leaves else 'permission-disabled' }}">
+                                        <i class="fas {{ 'fa-check' if permissions.edit_leaves else 'fa-times' }}"></i>
+                                        تعديل الإجازات
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- صلاحيات المغادرات -->
+                        <div class="permission-category">
+                            <h5 class="category-title">
+                                <i class="fas fa-sign-out-alt"></i>
+                                إدارة المغادرات
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="permission-item {{ 'permission-enabled' if permissions.view_departures else 'permission-disabled' }}">
+                                        <i class="fas {{ 'fa-check' if permissions.view_departures else 'fa-times' }}"></i>
+                                        مشاهدة المغادرات
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="permission-item {{ 'permission-enabled' if permissions.edit_departures else 'permission-disabled' }}">
+                                        <i class="fas {{ 'fa-check' if permissions.edit_departures else 'fa-times' }}"></i>
+                                        تعديل المغادرات
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- صلاحيات النقل -->
+                        <div class="permission-category">
+                            <h5 class="category-title">
+                                <i class="fas fa-exchange-alt"></i>
+                                إدارة النقل
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="permission-item {{ 'permission-enabled' if permissions.view_transfers else 'permission-disabled' }}">
+                                        <i class="fas {{ 'fa-check' if permissions.view_transfers else 'fa-times' }}"></i>
+                                        مشاهدة النقل
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="permission-item {{ 'permission-enabled' if permissions.edit_transfers else 'permission-disabled' }}">
+                                        <i class="fas {{ 'fa-check' if permissions.edit_transfers else 'fa-times' }}"></i>
+                                        تعديل النقل
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- صلاحيات التقارير والتصدير -->
+                        <div class="permission-category">
+                            <h5 class="category-title">
+                                <i class="fas fa-chart-bar"></i>
+                                التقارير والتصدير
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="permission-item {{ 'permission-enabled' if permissions.view_reports else 'permission-disabled' }}">
+                                        <i class="fas {{ 'fa-check' if permissions.view_reports else 'fa-times' }}"></i>
+                                        مشاهدة التقارير
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="permission-item {{ 'permission-enabled' if permissions.edit_reports else 'permission-disabled' }}">
+                                        <i class="fas {{ 'fa-check' if permissions.edit_reports else 'fa-times' }}"></i>
+                                        إنشاء التقارير
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="permission-item {{ 'permission-enabled' if permissions.view_exports else 'permission-disabled' }}">
+                                        <i class="fas {{ 'fa-check' if permissions.view_exports else 'fa-times' }}"></i>
+                                        مشاهدة التصدير
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="permission-item {{ 'permission-enabled' if permissions.edit_exports else 'permission-disabled' }}">
+                                        <i class="fas {{ 'fa-check' if permissions.edit_exports else 'fa-times' }}"></i>
+                                        تصدير البيانات
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- صلاحيات إدارة النظام -->
+                        <div class="permission-category">
+                            <h5 class="category-title">
+                                <i class="fas fa-cogs"></i>
+                                إدارة النظام
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="permission-item {{ 'permission-enabled' if permissions.view_users else 'permission-disabled' }}">
+                                        <i class="fas {{ 'fa-check' if permissions.view_users else 'fa-times' }}"></i>
+                                        مشاهدة المستخدمين
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="permission-item {{ 'permission-enabled' if permissions.edit_users else 'permission-disabled' }}">
+                                        <i class="fas {{ 'fa-check' if permissions.edit_users else 'fa-times' }}"></i>
+                                        إدارة المستخدمين
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="permission-item {{ 'permission-enabled' if permissions.view_forms else 'permission-disabled' }}">
+                                        <i class="fas {{ 'fa-check' if permissions.view_forms else 'fa-times' }}"></i>
+                                        مشاهدة النماذج
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="permission-item {{ 'permission-enabled' if permissions.edit_forms else 'permission-disabled' }}">
+                                        <i class="fas {{ 'fa-check' if permissions.edit_forms else 'fa-times' }}"></i>
+                                        إدارة النماذج
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="permission-item {{ 'permission-enabled' if permissions.view_system else 'permission-disabled' }}">
+                                        <i class="fas {{ 'fa-check' if permissions.view_system else 'fa-times' }}"></i>
+                                        مشاهدة إعدادات النظام
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="permission-item {{ 'permission-enabled' if permissions.edit_system else 'permission-disabled' }}">
+                                        <i class="fas {{ 'fa-check' if permissions.edit_system else 'fa-times' }}"></i>
+                                        تعديل إعدادات النظام
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- الصلاحيات الخاصة -->
+                        <div class="permission-category">
+                            <h5 class="category-title">
+                                <i class="fas fa-star"></i>
+                                الصلاحيات الخاصة
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="permission-item {{ 'permission-enabled' if permissions.school_admin else 'permission-disabled' }}">
+                                        <i class="fas {{ 'fa-check' if permissions.school_admin else 'fa-times' }}"></i>
+                                        مدير مدرسة
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="permission-item {{ 'permission-enabled' if permissions.directorate_admin else 'permission-disabled' }}">
+                                        <i class="fas {{ 'fa-check' if permissions.directorate_admin else 'fa-times' }}"></i>
+                                        مدير مديرية
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .info-card {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        height: 100%;
+    }
+    
+    .info-card h6 {
+        color: #495057;
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+    
+    .info-card p {
+        margin-bottom: 8px;
+        color: #6c757d;
+    }
+    
+    .permission-category {
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .category-title {
+        color: #495057;
+        margin-bottom: 15px;
+        font-weight: 600;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 10px;
+    }
+    
+    .category-title i {
+        color: #007bff;
+        margin-left: 8px;
+    }
+    
+    .permission-item {
+        padding: 12px 15px;
+        margin: 8px 0;
+        border-radius: 25px;
+        font-size: 0.9em;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .permission-item i {
+        margin-left: 8px;
+        font-size: 1.1em;
+    }
+    
+    .permission-enabled {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .permission-enabled:hover {
+        background: linear-gradient(135deg, #c3e6cb 0%, #b8dcc8 100%);
+        transform: translateY(-1px);
+    }
+    
+    .permission-disabled {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    .permission-disabled:hover {
+        background: linear-gradient(135deg, #f5c6cb 0%, #f1b0b7 100%);
+        transform: translateY(-1px);
+    }
+    
+    .badge {
+        font-size: 0.85em;
+        padding: 6px 12px;
+    }
+    
+    @media (max-width: 768px) {
+        .permission-category {
+            padding: 15px;
+        }
+        
+        .permission-item {
+            font-size: 0.85em;
+            padding: 10px 12px;
+        }
+        
+        .info-card {
+            margin-bottom: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // إضافة تأثيرات تفاعلية للصلاحيات
+    document.addEventListener('DOMContentLoaded', function() {
+        const permissionItems = document.querySelectorAll('.permission-item');
+        
+        permissionItems.forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px) scale(1.02)';
+            });
+            
+            item.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+    });
+</script>
+{% endblock %}

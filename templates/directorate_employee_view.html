@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}بيانات موظف المديرية{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h3>بيانات موظف المديرية: {{ employee.name }}</h3>
+            <div>
+                {% if current_user.has_permission('can_edit_employees') or current_user.has_permission('can_edit_employees_data') %}
+                <a href="{{ url_for('employee.edit_directorate_employee', id=employee.id) }}" class="btn btn-light">
+                    <i class="fas fa-edit"></i> تعديل
+                </a>
+                {% endif %}
+                <a href="{{ url_for('employee.directorate_employees') }}" class="btn btn-light">
+                    <i class="fas fa-arrow-left"></i> العودة
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>المعلومات الأساسية</h4>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>الرقم الوزاري</th>
+                            <td>{{ employee.ministry_number }}</td>
+                        </tr>
+                        <tr>
+                            <th>الاسم</th>
+                            <td>{{ employee.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>رقم الهوية</th>
+                            <td>{{ employee.civil_id }}</td>
+                        </tr>
+                        <tr>
+                            <th>رقم الهاتف</th>
+                            <td>{{ employee.phone_number or 'غير محدد' }}</td>
+                        </tr>
+                        <tr>
+                            <th>الجنس</th>
+                            <td>{{ employee.gender }}</td>
+                        </tr>
+                        <tr>
+                            <th>المسمى الوظيفي</th>
+                            <td>{{ employee.job_title }}</td>
+                        </tr>
+                        <tr>
+                            <th>القسم</th>
+                            <td>{{ employee.school.name if employee.school else 'غير محدد' }}</td>
+                        </tr>
+                        <tr>
+                            <th>تاريخ التعيين</th>
+                            <td>{{ employee.appointment_date.strftime('%Y-%m-%d') if employee.appointment_date else 'غير محدد' }}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h4>المؤهلات العلمية</h4>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>المؤهل</th>
+                            <td>{{ employee.qualification or 'غير محدد' }}</td>
+                        </tr>
+                        <tr>
+                            <th>تخصص البكالوريوس</th>
+                            <td>{{ employee.bachelor_specialization or 'غير محدد' }}</td>
+                        </tr>
+                        <tr>
+                            <th>تخصص الدبلوم العالي</th>
+                            <td>{{ employee.high_diploma_specialization or 'غير محدد' }}</td>
+                        </tr>
+                        <tr>
+                            <th>تخصص الماجستير</th>
+                            <td>{{ employee.masters_specialization or 'غير محدد' }}</td>
+                        </tr>
+                        <tr>
+                            <th>تخصص الدكتوراه</th>
+                            <td>{{ employee.phd_specialization or 'غير محدد' }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

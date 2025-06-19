@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}تعديل النقص الفني{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">تعديل النقص الفني</h3>
+                    <div class="card-tools">
+                        <a href="{{ url_for('report.technical_deficiency_management') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> العودة
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('report.edit_technical_deficiency', deficiency_id=deficiency.id) }}">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">المدرسة</label>
+                                    <input type="text" class="form-control" value="{{ deficiency.school.name }}" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="specialization" class="form-label">التخصص</label>
+                                    <input type="text" name="specialization" id="specialization" class="form-control" value="{{ deficiency.specialization }}" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="job_title" class="form-label">الوظيفة</label>
+                                    <select name="job_title" id="job_title" class="form-control" required>
+                                        <option value="">اختر الوظيفة</option>
+                                        {% for job in job_titles %}
+                                        <option value="{{ job }}" {% if job == deficiency.job_title %}selected{% endif %}>{{ job }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="subject" class="form-label">المبحث</label>
+                                    <input type="text" name="subject" id="subject" class="form-control" value="{{ deficiency.subject or '' }}">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label for="deficiency_bachelor" class="form-label">نقص بكالوريوس</label>
+                                    <input type="number" name="deficiency_bachelor" id="deficiency_bachelor" class="form-control" value="{{ deficiency.deficiency_bachelor or 0 }}" min="0">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label for="deficiency_diploma" class="form-label">نقص دبلوم</label>
+                                    <input type="number" name="deficiency_diploma" id="deficiency_diploma" class="form-control" value="{{ deficiency.deficiency_diploma or 0 }}" min="0">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label for="surplus_bachelor" class="form-label">زيادة بكالوريوس</label>
+                                    <input type="number" name="surplus_bachelor" id="surplus_bachelor" class="form-control" value="{{ deficiency.surplus_bachelor or 0 }}" min="0">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label for="surplus_diploma" class="form-label">زيادة دبلوم</label>
+                                    <input type="number" name="surplus_diploma" id="surplus_diploma" class="form-control" value="{{ deficiency.surplus_diploma or 0 }}" min="0">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    <label for="notes" class="form-label">ملاحظات</label>
+                                    <textarea name="notes" id="notes" class="form-control" rows="3">{{ deficiency.notes or '' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> حفظ التعديلات
+                                    </button>
+                                    <a href="{{ url_for('report.technical_deficiency_management') }}" class="btn btn-secondary">
+                                        <i class="fas fa-times"></i> إلغاء
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

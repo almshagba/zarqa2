@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}ترحيل المغادرات الشهري{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">ترحيل المغادرات الشهري</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4>معالجة شهر جديد</h4>
+                                </div>
+                                <div class="card-body">
+                                    <form method="POST">
+                                        <div class="form-group">
+                                            <label for="year">السنة:</label>
+                                            <select class="form-control" id="year" name="year" required>
+                                                {% for year in range(2020, 2030) %}
+                                                <option value="{{ year }}">{{ year }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="month">الشهر:</label>
+                                            <select class="form-control" id="month" name="month" required>
+                                                <option value="1">يناير</option>
+                                                <option value="2">فبراير</option>
+                                                <option value="3">مارس</option>
+                                                <option value="4">أبريل</option>
+                                                <option value="5">مايو</option>
+                                                <option value="6">يونيو</option>
+                                                <option value="7">يوليو</option>
+                                                <option value="8">أغسطس</option>
+                                                <option value="9">سبتمبر</option>
+                                                <option value="10">أكتوبر</option>
+                                                <option value="11">نوفمبر</option>
+                                                <option value="12">ديسمبر</option>
+                                            </select>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">معالجة الشهر</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4>الشهور المعالجة</h4>
+                                </div>
+                                <div class="card-body">
+                                    {% if processed_months %}
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>السنة/الشهر</th>
+                                                    <th>عدد الموظفين</th>
+                                                    <th>إجمالي الأيام المحولة</th>
+                                                    <th>التفاصيل</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for month_data in processed_months %}
+                                                <tr>
+                                                    <td>{{ month_data.year }}/{{ month_data.month }}</td>
+                                                    <td>{{ month_data.employee_count }}</td>
+                                                    <td>{{ month_data.total_converted_days or 0 }}</td>
+                                                    <!-- في جدول الشهور المعالجة، أضف عمود جديد للإجراءات -->
+                                                    <td>
+                                                        <a href="{{ url_for('leave.monthly_departure_details', year=month_data.year, month=month_data.month) }}" 
+                                                           class="btn btn-info btn-sm">عرض التفاصيل</a>
+                                                        
+                                                        <form method="POST" action="{{ url_for('leave.cancel_monthly_processing', year=month_data.year, month=month_data.month) }}" 
+                                                              style="display: inline-block;" 
+                                                              onsubmit="return window.confirm('هل أنت متأكد من إلغاء ترحيل هذا الشهر؟ سيتم حذف جميع البيانات المرتبطة.')">
+                                                            <button type="submit" class="btn btn-danger btn-sm">إلغاء الترحيل</button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <p class="text-muted">لم يتم معالجة أي شهر بعد</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// تعيين الشهر والسنة الحالية كقيم افتراضية
+document.addEventListener('DOMContentLoaded', function() {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    
+    document.getElementById('year').value = currentYear;
+    document.getElementById('month').value = currentMonth;
+});
+</script>
+{% endblock %}

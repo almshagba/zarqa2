@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>تعديل رصيد الإجازات - {{ employee.name }}</h1>
+    <div>
+        <a href="{{ url_for('leave.leave_balances') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right"></i> العودة
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">تعديل الرصيد</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="current_year_balance" class="form-label">رصيد السنة الحالية <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="current_year_balance" name="current_year_balance" 
+                                   value="{{ balance.current_year_balance }}" min="0" max="60" required>
+                            <div class="form-text">الحد الأقصى: 60 يوم</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="previous_year_balance" class="form-label">رصيد السنة السابقة <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="previous_year_balance" name="previous_year_balance" 
+                                   value="{{ balance.previous_year_balance }}" min="0" max="30" required>
+                            <div class="form-text">الحد الأقصى: 30 يوم</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="sick_leave_balance" class="form-label">رصيد الإجازات المرضية <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="sick_leave_balance" name="sick_leave_balance" 
+                                   value="{{ balance.sick_leave_balance }}" min="0" max="30" required>
+                            <div class="form-text">الحد الأقصى: 30 يوم</div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('leave.leave_balances') }}" class="btn btn-secondary me-md-2">إلغاء</a>
+                        <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">معلومات الموظف</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>الاسم:</strong> {{ employee.name }}</p>
+                <p><strong>الرقم الوزاري:</strong> {{ employee.ministry_number }}</p>
+                <p><strong>القسم:</strong> {{ employee.school.name }}</p>
+                <p><strong>الوظيفة:</strong> {{ employee.job_title }}</p>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0">الاستخدام الحالي</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>الإجازات السنوية المستخدمة:</strong> <span class="badge bg-warning">{{ balance.used_annual_leave }}</span></p>
+                <p><strong>الإجازات المرضية المستخدمة:</strong> <span class="badge bg-warning">{{ balance.used_sick_leave }}</span></p>
+                <p><strong>المتبقي السنوي:</strong> <span class="badge bg-success">{{ balance.get_remaining_annual_balance() }}</span></p>
+                <p><strong>المتبقي المرضي:</strong> <span class="badge bg-success">{{ balance.get_remaining_sick_balance() }}</span></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

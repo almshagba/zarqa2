@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقرير رصيد الإجازات المحسن</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { font-size: 11px; margin: 0; }
+            .page-break { page-break-before: always; }
+            .table { font-size: 10px; }
+            .table th, .table td { padding: 3px !important; }
+            .employee-card { margin-bottom: 20px; }
+            .summary-stats { font-size: 9px; }
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .main-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .main-header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .main-header .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .employee-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        
+        .employee-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .employee-info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .employee-info::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            transform: translate(30px, -30px);
+        }
+        
+        .employee-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .employee-details {
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+        
+        .balance-overview {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 25px;
+        }
+        
+        .balance-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            transition: transform 0.2s ease;
+        }
+        
+        .balance-card:hover {
+            transform: scale(1.05);
+        }
+        
+        .balance-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .balance-label {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .annual-balance { color: #28a745; }
+        .used-annual { color: #ffc107; }
+        .remaining-annual { color: #17a2b8; }
+        .sick-balance { color: #dc3545; }
+        
+        .leaves-section {
+            padding: 25px;
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #007bff;
+            color: #333;
+        }
+        
+        .leaves-table {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .table thead th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-weight: 600;
+            padding: 15px 10px;
+        }
+        
+        .table tbody tr {
+            transition: background-color 0.2s ease;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .leave-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .annual-leave-badge {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+            color: #2d3436;
+        }
+        
+        .sick-leave-badge {
+            background: linear-gradient(135deg, #fd79a8 0%, #fdcb6e 100%);
+            color: #2d3436;
+        }
+        
+        .days-badge {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .no-leaves {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        .summary-stats {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .control-buttons {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+        
+        .btn-modern {
+            border-radius: 25px;
+            padding: 10px 20px;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .report-footer {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <!-- أزرار التحكم -->
+    <div class="control-buttons no-print">
+        <button onclick="window.print()" class="btn btn-primary btn-modern me-2">
+            <i class="fas fa-print"></i> طباعة التقرير
+        </button>
+        <button onclick="window.close()" class="btn btn-secondary btn-modern">
+            <i class="fas fa-times"></i> إغلاق
+        </button>
+    </div>
+
+    <!-- ترويسة التقرير الرئيسية -->
+    <div class="main-header">
+        <div class="container">
+            <h1><i class="fas fa-building"></i> وزارة التربية</h1>
+            <div class="subtitle">تقرير رصيد الإجازات الشامل - للسنة {{ current_year }}</div>
+            <div class="mt-3">
+                <i class="fas fa-calendar"></i> تاريخ الطباعة: {{ print_date.strftime('%Y-%m-%d %H:%M') }}
+                {% if search_term %}
+                <br><i class="fas fa-search"></i> البحث: {{ search_term }}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <!-- إحصائيات عامة -->
+        <div class="summary-stats">
+            <div class="row text-center">
+                <div class="col-md-3">
+                    <h4><i class="fas fa-users"></i> {{ employees_data|length }}</h4>
+                    <p>إجمالي الموظفين</p>
+                </div>
+                <div class="col-md-3">
+                    <h4><i class="fas fa-calendar-check"></i> {{ employees_data|sum(attribute='annual_leaves')|length if employees_data else 0 }}</h4>
+                    <p>إجمالي الإجازات السنوية</p>
+                </div>
+                <div class="col-md-3">
+                    <h4><i class="fas fa-user-injured"></i> {{ employees_data|sum(attribute='sick_leaves')|length if employees_data else 0 }}</h4>
+                    <p>إجمالي الإجازات المرضية</p>
+                </div>
+                <div class="col-md-3">
+                    <h4><i class="fas fa-clock"></i> {{ current_year }}</h4>
+                    <p>السنة المالية</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- بيانات الموظفين -->
+        {% for data in employees_data %}
+        {% set employee = data.employee %}
+        {% set balance = data.balance %}
+        {% set annual_leaves = data.annual_leaves %}
+        {% set sick_leaves = data.sick_leaves %}
+        
+        <div class="employee-card">
+            <!-- معلومات الموظف -->
+            <div class="employee-info">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="employee-name">
+                            <i class="fas fa-user"></i> {{ employee.name }}
+                        </div>
+                        <div class="employee-details">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <i class="fas fa-id-card"></i> الرقم الوزاري: {{ employee.ministry_number }}
+                                </div>
+                                <div class="col-md-6">
+                                    <i class="fas fa-school"></i> القسم: {{ employee.school.name if employee.school else 'غير محدد' }}
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-6">
+                                    <i class="fas fa-briefcase"></i> المسمى الوظيفي: {{ employee.job_title or 'غير محدد' }}
+                                </div>
+                                <div class="col-md-6">
+                                    <i class="fas fa-map-marker-alt"></i> المنطقة: {{ employee.region or 'غير محدد' }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="employee-stats">
+                            <div><strong>{{ (annual_leaves|length + sick_leaves|length) }}</strong> إجازة مستخدمة</div>
+                            <div><strong>{{ balance.get_remaining_annual_balance() + balance.get_remaining_sick_balance() }}</strong> يوم متبقي</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- نظرة عامة على الأرصدة -->
+            <div class="balance-overview">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="balance-card">
+                            <div class="balance-number annual-balance">{{ balance.current_year_balance + balance.previous_year_balance }}</div>
+                            <div class="balance-label">الرصيد السنوي الإجمالي</div>
+                            <small class="text-muted">الحالي: {{ balance.current_year_balance }} | السابق: {{ balance.previous_year_balance }}</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="balance-card">
+                            <div class="balance-number used-annual">{{ balance.used_annual_leave }}</div>
+                            <div class="balance-label">المستخدم السنوي</div>
+                            <small class="text-muted">من أصل {{ balance.current_year_balance + balance.previous_year_balance }} يوم</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="balance-card">
+                            <div class="balance-number remaining-annual">{{ balance.get_remaining_annual_balance() }}</div>
+                            <div class="balance-label">المتبقي السنوي</div>
+                            <small class="text-muted">{% if balance.get_remaining_annual_balance() < 5 %}تحذير: رصيد منخفض{% else %}رصيد جيد{% endif %}</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="balance-card">
+                            <div class="balance-number sick-balance">{{ balance.get_remaining_sick_balance() }}</div>
+                            <div class="balance-label">المتبقي المرضي</div>
+                            <small class="text-muted">من أصل {{ balance.sick_leave_balance }} يوم</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تفاصيل الإجازات -->
+            <div class="leaves-section">
+                <div class="row">
+                    <!-- الإجازات السنوية -->
+                    <div class="col-md-6">
+                        <div class="section-title">
+                            <i class="fas fa-calendar-alt text-primary"></i> الإجازات السنوية المستخدمة
+                            <span class="badge bg-primary">{{ annual_leaves|length }}</span>
+                        </div>
+                        {% if annual_leaves and annual_leaves|length > 0 %}
+                        <div class="leaves-table">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th><i class="fas fa-tag"></i> النوع</th>
+                                        <th><i class="fas fa-calendar-day"></i> من</th>
+                                        <th><i class="fas fa-calendar-day"></i> إلى</th>
+                                        <th><i class="fas fa-clock"></i> الأيام</th>
+                                        <th><i class="fas fa-comment"></i> السبب</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for leave in annual_leaves %}
+                                    <tr>
+                                        <td><span class="leave-badge annual-leave-badge">{{ leave.leave_type }}</span></td>
+                                        <td>{{ leave.start_date.strftime('%Y-%m-%d') }}</td>
+                                        <td>{{ leave.end_date.strftime('%Y-%m-%d') }}</td>
+                                        <td><span class="days-badge">{{ leave.days_count }}</span></td>
+                                        <td>{{ leave.reason[:15] + '...' if leave.reason and leave.reason|length > 15 else leave.reason or '-' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="no-leaves">
+                            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                            <p>لا توجد إجازات سنوية مستخدمة في هذا العام</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- الإجازات المرضية -->
+                    <div class="col-md-6">
+                        <div class="section-title">
+                            <i class="fas fa-user-injured text-danger"></i> الإجازات المرضية المستخدمة
+                            <span class="badge bg-danger">{{ sick_leaves|length }}</span>
+                        </div>
+                        {% if sick_leaves %}
+                        <div class="leaves-table">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th><i class="fas fa-calendar-day"></i> من</th>
+                                        <th><i class="fas fa-calendar-day"></i> إلى</th>
+                                        <th><i class="fas fa-clock"></i> الأيام</th>
+                                        <th><i class="fas fa-notes-medical"></i> السبب</th>
+                                        <th><i class="fas fa-file-medical"></i> ملاحظات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for leave in sick_leaves %}
+                                    <tr>
+                                        <td>{{ leave.start_date.strftime('%Y-%m-%d') }}</td>
+                                        <td>{{ leave.end_date.strftime('%Y-%m-%d') }}</td>
+                                        <td><span class="days-badge">{{ leave.days_count }}</span></td>
+                                        <td>{{ leave.reason[:15] + '...' if leave.reason and leave.reason|length > 15 else leave.reason or '-' }}</td>
+                                        <td>{{ leave.notes[:15] + '...' if leave.notes and leave.notes|length > 15 else leave.notes or '-' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="no-leaves">
+                            <i class="fas fa-user-check fa-3x text-muted mb-3"></i>
+                            <p>لا توجد إجازات مرضية مستخدمة في هذا العام</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% if not loop.last %}
+        <div class="page-break"></div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- تذييل التقرير -->
+    <div class="report-footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-chart-bar"></i> إحصائيات التقرير</h5>
+                    <p>تم إنشاء هذا التقرير بواسطة نظام إدارة شؤون الموظفين</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <h5><i class="fas fa-building"></i> وزارة التربية</h5>
+                    <p>جميع الحقوق محفوظة © {{ print_date.strftime('%Y') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // تحسينات للطباعة
+        window.addEventListener('beforeprint', function() {
+            document.body.style.fontSize = '11px';
+        });
+        
+        window.addEventListener('afterprint', function() {
+            document.body.style.fontSize = '';
+        });
+        
+        // طباعة تلقائية (اختياري)
+        // window.onload = function() { setTimeout(() => window.print(), 1000); }
+    </script>
+</body>
+</html>

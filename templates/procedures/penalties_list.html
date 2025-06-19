@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}الإجراءات - العقوبات{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="card-title">الإجراءات - العقوبات</h3>
+                    <div>
+                        <a href="{{ url_for('procedures.investigation_committees_list') }}" class="btn btn-info me-2">
+                            <i class="fas fa-users"></i> لجان التحقيق
+                        </a>
+                        <a href="{{ url_for('procedures.add_penalty') }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> إضافة عقوبة جديدة
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- نموذج البحث -->
+                    <form method="GET" class="mb-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="search" 
+                                           placeholder="البحث بالاسم أو الرقم الوزاري أو نوع العقوبة..." 
+                                           value="{{ search }}">
+                                    <button class="btn btn-outline-secondary" type="submit">
+                                        <i class="fas fa-search"></i> بحث
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <!-- جدول العقوبات -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>الاسم</th>
+                                    <th>الرقم الوزاري</th>
+                                    <th>نوع العقوبة</th>
+                                    <th>المدرسة/القسم</th>
+                                    <th>رقم الكتاب</th>
+                                    <th>تاريخ الكتاب</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for penalty in penalties.items %}
+                                <tr>
+                                    <td>{{ penalty.employee.name }}</td>
+                                    <td>{{ penalty.employee.ministry_number }}</td>
+                                    <td>{{ penalty.penalty_type }}</td>
+                                    <td>{{ penalty.school.name }}</td>
+                                    <td>{{ penalty.letter_number }}</td>
+                                    <td>{{ penalty.letter_date.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <a href="{{ url_for('procedures.print_penalty', penalty_id=penalty.id) }}" 
+                                       class="btn btn-info btn-sm" target="_blank">
+                                        <i class="fas fa-print"></i> طباعة
+                                    </a>
+                                    <a href="{{ url_for('procedures.export_penalty_word', penalty_id=penalty.id) }}" 
+                                       class="btn btn-success btn-sm">
+                                        <i class="fas fa-file-word"></i> Word
+                                    </a>
+                                    <a href="{{ url_for('procedures.edit_penalty', penalty_id=penalty.id) }}" 
+                                       class="btn btn-warning btn-sm">
+                                        <i class="fas fa-edit"></i> تعديل
+                                    </a>
+                                        <form method="POST" action="{{ url_for('procedures.delete_penalty', penalty_id=penalty.id) }}" 
+                                              style="display: inline;" 
+                                              onsubmit="return confirm('هل أنت متأكد من حذف هذه العقوبة؟')">
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-trash"></i> حذف
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center">لا توجد عقوبات مسجلة</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- التنقل بين الصفحات -->
+                    {% if penalties.pages > 1 %}
+                    <nav aria-label="تنقل الصفحات">
+                        <ul class="pagination justify-content-center">
+                            {% if penalties.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('procedures.procedures_list', page=penalties.prev_num, search=search) }}">السابق</a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for page_num in penalties.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != penalties.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('procedures.procedures_list', page=page_num, search=search) }}">{{ page_num }}</a>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                    {% endif %}
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if penalties.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('procedures.procedures_list', page=penalties.next_num, search=search) }}">التالي</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

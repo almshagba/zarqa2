@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>طباعة نقل فردي</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #000;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 18px;
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        
+        .header h2 {
+            font-size: 16px;
+            margin: 5px 0;
+        }
+        
+        .header h3 {
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        
+        .recipient {
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .subject {
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .content {
+            text-align: justify;
+            margin: 20px 0;
+            line-height: 2;
+        }
+        
+        .content p {
+            margin: 15px 0;
+        }
+        
+        .signature-section {
+            margin-top: 80px;
+            text-align: left;
+        }
+        
+        .copies {
+            margin-top: 60px;
+            text-align: right;
+        }
+        
+        .copies p {
+            margin: 5px 0;
+        }
+        
+        .print-button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .print-button:hover {
+            background: #0056b3;
+        }
+        
+        .edit-button {
+            position: fixed;
+            top: 10px;
+            right: 120px;
+            background: #ffc107;
+            color: #212529;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .edit-button:hover {
+            background: #e0a800;
+        }
+        
+        .editor-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .editor-content {
+            background-color: #fefefe;
+            margin: 2% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            height: 90%;
+            border-radius: 10px;
+            overflow-y: auto;
+        }
+        
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .editor-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .close-editor {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .close-editor:hover {
+            background: #c82333;
+        }
+        
+        .editor-form {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .editor-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .save-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .save-button:hover {
+            background: #218838;
+        }
+        
+        .preview-button {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .preview-button:hover {
+            background: #138496;
+        }
+        
+        @media print {
+            body {
+                margin: 0;
+                padding: 15px;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="print-button no-print" onclick="window.print()">طباعة</button>
+    <button class="edit-button no-print" onclick="openEditor()">تحرير الكتاب</button>
+    
+    <div class="header">
+        <div style="text-align: center; margin-bottom: 10px;">
+            <div style="display: inline-block; margin-bottom: 10px;">
+                <div style="font-size: 14px; margin-bottom: 5px;">بسم الله الرحمن الرحيم</div>
+                <img src="{{ url_for('static', filename='images/jordan_coat_of_arms.png') }}" alt="شعار المملكة الأردنية الهاشمية" style="height: 80px; margin: 10px 0;">
+            </div>
+        </div>
+        <h3>مديرية التربية والتعليم لمنطقة الزرقاء الثانية</h3>
+    </div>
+    
+    <div class="recipient">
+        {% if transfer.from_school.gender == 'إناث' %}مديرة{% else %}مدير{% endif %} {{ transfer.from_school.name }}
+    </div>
+    
+    <div class="subject">
+        الموضوع: {{ transfer.employee.job_title }}/{{ transfer.employee.name }}/{{ transfer.employee.qualification }} 
+        ({% if transfer.employee.qualification == 'بكالوريوس' %}{{ transfer.employee.bachelor_specialization }}{% elif transfer.employee.qualification == 'ماجستير' %}{{ transfer.employee.masters_specialization }}{% elif transfer.employee.qualification == 'دكتوراه' %}{{ transfer.employee.phd_specialization }}{% elif transfer.employee.qualification == 'دبلوم عالي' %}{{ transfer.employee.high_diploma_specialization }}{% else %}{{ transfer.employee.bachelor_specialization }}{% endif %}).({{ transfer.employee.ministry_number }})<br>
+        والنقل الداخلي
+    </div>
+    
+    <div class="content">
+        <p>السلام عليكم ورحمة الله وبرفعاته ،،،</p>
+        
+        <p>فاستناداً لأحكام المادة (43/أ/1) من نظام إدارة الموارد البشرية في القطاع العام رقم (33) لسنة 2024 وتعديلاته والبند (سادساً/2) للصلاحيات المفوضة إلى من قبل معالي وزير التربية والتعليم في كتابه رقم (1/70/31079) تاريخ 11/7/2024 وبناءً على تنسيب مدير الشؤون الإدارية والمالية،</p>
+        
+        <p>قررت نقل المذكور{{ (transfer.employee.gender == 'أنثى' or transfer.employee.gender == 'انثى') and 'ة' or '' }} أعلاه من مركز عمل{{ (transfer.employee.gender == 'أنثى' or transfer.employee.gender == 'انثى') and 'ها' or 'ه' }} الحالي في ({{ transfer.from_school.name }}) إلى ({{ transfer.to_school.name }}) اعتباراً من تاريخه.</p>
+        
+        <p>راجياً إبلاغ{{ (transfer.employee.gender == 'أنثى' or transfer.employee.gender == 'انثى') and 'ها' or 'ه' }} بتسليم ما بعهدت{{ (transfer.employee.gender == 'أنثى' or transfer.employee.gender == 'انثى') and 'ها' or 'ه' }} ومباشرة عمل{{ (transfer.employee.gender == 'أنثى' or transfer.employee.gender == 'انثى') and 'ها' or 'ه' }} الجديد بعد الحصول على براءة الذمة اللازمة وحسب الأصول.</p>
+        
+        <p>واقبلوا الاحترام ،</p>
+    </div>
+    
+    <div class="signature-section">
+        <p style="text-align: left; margin-top: 50px; font-size: 18px; font-weight: bold; margin-bottom: 5px;">
+            مدير التربية والتعليم
+        </p>
+    </div>
+    
+    <div class="copies">
+        <p>نسخة / مدير الشؤون الإدارية والمالية</p>
+        <p>نسخة / رئيس قسم شؤون الموظفين</p>
+        <p>نسخة / {% if transfer.to_school.gender == 'إناث' %}مديرة{% else %}مدير{% endif %} {{ transfer.to_school.name }}</p>
+        <p>نسخة / الديوان</p>
+    </div>
+    
+    <!-- محرر الكتاب -->
+    <div id="editorModal" class="editor-modal no-print">
+        <div class="editor-content">
+            <div class="editor-header">
+                <div class="editor-title">تحرير محتوى كتاب النقل</div>
+                <button class="close-editor" onclick="closeEditor()">&times;</button>
+            </div>
+            
+            <form class="editor-form" id="editorForm">
+                <div class="form-group">
+                    <label for="recipientText">المرسل إليه:</label>
+                    <input type="text" id="recipientText" name="recipientText" value="{% if transfer.from_school.gender == 'إناث' %}مديرة{% else %}مدير{% endif %} {{ transfer.from_school.name }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="subjectText">الموضوع:</label>
+                    <textarea id="subjectText" name="subjectText" rows="3">{{ transfer.employee.job_title }}/{{ transfer.employee.name }}/{{ transfer.employee.qualification }} ({% if transfer.employee.qualification == 'بكالوريوس' %}{{ transfer.employee.bachelor_specialization }}{% elif transfer.employee.qualification == 'ماجستير' %}{{ transfer.employee.masters_specialization }}{% elif transfer.employee.qualification == 'دكتوراه' %}{{ transfer.employee.phd_specialization }}{% elif transfer.employee.qualification == 'دبلوم عالي' %}{{ transfer.employee.high_diploma_specialization }}{% else %}{{ transfer.employee.bachelor_specialization }}{% endif %}).({{ transfer.employee.ministry_number }})
+والنقل الداخلي</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="greetingText">التحية:</label>
+                    <input type="text" id="greetingText" name="greetingText" value="السلام عليكم ورحمة الله وبرفعاته ،،،">
+                </div>
+                
+                <div class="form-group">
+                    <label for="legalBasisText">الأساس القانوني:</label>
+                    <textarea id="legalBasisText" name="legalBasisText" rows="3">فاستناداً لأحكام المادة (43/أ/1) من نظام إدارة الموارد البشرية في القطاع العام رقم (33) لسنة 2024 وتعديلاته والبند (سادساً/2) للصلاحيات المفوضة إلى من قبل معالي وزير التربية والتعليم في كتابه رقم (1/70/31079) تاريخ 11/7/2024 وبناءً على تنسيب مدير الشؤون الإدارية والمالية،</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="decisionText">قرار النقل:</label>
+                    <textarea id="decisionText" name="decisionText" rows="2">قررت نقل المذكور{{ (transfer.employee.gender == 'أنثى' or transfer.employee.gender == 'انثى') and 'ة' or '' }} أعلاه من مركز عمل{{ (transfer.employee.gender == 'أنثى' or transfer.employee.gender == 'انثى') and 'ها' or 'ه' }} الحالي في ({{ transfer.from_school.name }}) إلى ({{ transfer.to_school.name }}) اعتباراً من تاريخه.</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="instructionsText">التعليمات:</label>
+                    <textarea id="instructionsText" name="instructionsText" rows="2">راجياً إبلاغ{{ (transfer.employee.gender == 'أنثى' or transfer.employee.gender == 'انثى') and 'ها' or 'ه' }} بتسليم ما بعهدت{{ (transfer.employee.gender == 'أنثى' or transfer.employee.gender == 'انثى') and 'ها' or 'ه' }} ومباشرة عمل{{ (transfer.employee.gender == 'أنثى' or transfer.employee.gender == 'انثى') and 'ها' or 'ه' }} الجديد بعد الحصول على براءة الذمة اللازمة وحسب الأصول.</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="closingText">الختام:</label>
+                    <input type="text" id="closingText" name="closingText" value="واقبلوا الاحترام ،">
+                </div>
+                
+                <div class="form-group">
+                    <label for="signatureText">التوقيع:</label>
+                    <input type="text" id="signatureText" name="signatureText" value="مدير التربية والتعليم">
+                </div>
+                
+                <div class="form-group">
+                    <label for="copiesText">النسخ:</label>
+                    <textarea id="copiesText" name="copiesText" rows="4">نسخة / مدير الشؤون الإدارية والمالية
+نسخة / رئيس قسم شؤون الموظفين
+نسخة / {% if transfer.to_school.gender == 'إناث' %}مديرة{% else %}مدير{% endif %} {{ transfer.to_school.name }}
+نسخة / الديوان</textarea>
+                </div>
+                
+                <div class="editor-actions">
+                    <button type="button" class="preview-button" onclick="previewChanges()">معاينة التغييرات</button>
+                    <button type="button" class="save-button" onclick="applyChanges()">تطبيق التغييرات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        function openEditor() {
+            document.getElementById('editorModal').style.display = 'block';
+        }
+        
+        function closeEditor() {
+            document.getElementById('editorModal').style.display = 'none';
+        }
+        
+        function previewChanges() {
+            // تطبيق التغييرات مؤقتاً للمعاينة
+            applyChangesToDocument();
+            closeEditor();
+        }
+        
+        function applyChanges() {
+            // تطبيق التغييرات نهائياً
+            applyChangesToDocument();
+            closeEditor();
+            alert('تم تطبيق التغييرات بنجاح!');
+        }
+        
+        function applyChangesToDocument() {
+            // تحديث المرسل إليه
+            const recipientElement = document.querySelector('.recipient');
+            if (recipientElement) {
+                const recipientText = document.getElementById('recipientText').value;
+                if (recipientText) recipientElement.textContent = recipientText;
+            }
+            
+            // تحديث الموضوع
+            const subjectElement = document.querySelector('.subject');
+            if (subjectElement) {
+                const subjectText = document.getElementById('subjectText').value;
+                if (subjectText) {
+                    subjectElement.innerHTML = subjectText.replace(/\n/g, '<br>');
+                }
+            }
+            
+            // تحديث المحتوى
+            const contentPs = document.querySelectorAll('.content p');
+            if (contentPs.length >= 5) {
+                const greetingText = document.getElementById('greetingText').value;
+                const legalBasisText = document.getElementById('legalBasisText').value;
+                const decisionText = document.getElementById('decisionText').value;
+                const instructionsText = document.getElementById('instructionsText').value;
+                const closingText = document.getElementById('closingText').value;
+                
+                if (greetingText) contentPs[0].textContent = greetingText;
+                if (legalBasisText) contentPs[1].textContent = legalBasisText;
+                if (decisionText) contentPs[2].textContent = decisionText;
+                if (instructionsText) contentPs[3].textContent = instructionsText;
+                if (closingText) contentPs[4].textContent = closingText;
+            }
+            
+            // تحديث التوقيع
+            const signatureElement = document.querySelector('.signature-section p');
+            if (signatureElement) {
+                const signatureText = document.getElementById('signatureText').value;
+                if (signatureText) signatureElement.textContent = signatureText;
+            }
+            
+            // تحديث النسخ
+            const copiesElement = document.querySelector('.copies');
+            if (copiesElement) {
+                const copiesText = document.getElementById('copiesText').value;
+                if (copiesText) {
+                    copiesElement.innerHTML = copiesText.split('\n').map(line => `<p>${line}</p>`).join('');
+                }
+            }
+        }
+        
+        // إغلاق المحرر عند النقر خارجه
+        window.onclick = function(event) {
+            const modal = document.getElementById('editorModal');
+            if (event.target == modal) {
+                closeEditor();
+            }
+        }
+    </script>
+</body>
+</html>
+    

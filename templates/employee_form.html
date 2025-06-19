@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">{% if employee %}تعديل بيانات موظف{% else %}إضافة موظف جديد{% endif %}</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            <div class="row g-3">
+                <!-- الرقم الوزاري -->
+                <div class="col-md-4">
+                    <label for="ministry_number" class="form-label">الرقم الوزاري</label>
+                    <input type="text" class="form-control" id="ministry_number" name="ministry_number" required
+                        value="{{ employee.ministry_number if employee else '' }}">
+                </div>
+                
+                <!-- الاسم -->
+                <div class="col-md-4">
+                    <label for="name" class="form-label">الاسم</label>
+                    <input type="text" class="form-control" id="name" name="name" required
+                        value="{{ employee.name if employee else '' }}">
+                </div>
+                
+                <!-- الرقم الوطني -->
+                <div class="col-md-4">
+                    <label for="civil_id" class="form-label">رقم الهوية</label>
+                    <input type="text" class="form-control" id="civil_id" name="civil_id" required
+                           value="{{ employee.civil_id if employee else '' }}">
+                </div>
+                
+                <!-- رقم الهاتف -->
+                <div class="col-md-4">
+                    <label for="phone_number" class="form-label">رقم الهاتف</label>
+                    <input type="text" class="form-control" id="phone_number" name="phone_number"
+                        value="{{ employee.phone_number if employee else '' }}">
+                </div>
+                
+                <!-- الجنس -->
+                <div class="col-md-4">
+                    <label for="gender" class="form-label">الجنس</label>
+                    <select class="form-select" id="gender" name="gender" required>
+                        <option value="">اختر الجنس</option>
+                        <option value="ذكر" {% if employee and employee.gender == 'ذكر' %}selected{% endif %}>ذكر</option>
+                        <option value="أنثى" {% if employee and employee.gender == 'أنثى' %}selected{% endif %}>أنثى</option>
+                        <option value="انثى" {% if employee and employee.gender == 'انثى' %}selected{% endif %}>انثى</option>
+                    </select>
+                </div>
+                
+                <!-- الوظيفة -->
+                <div class="col-md-4">
+                    <label for="job_title" class="form-label">الوظيفة</label>
+                    <select class="form-select" id="job_title" name="job_title" required>
+                        <option value="" disabled {% if not employee %}selected{% endif %}>اختر الوظيفة</option>
+                        {% for job_title in job_titles %}
+                        <option value="{{ job_title }}" {% if employee and employee.job_title == job_title %}selected{% endif %}>{{ job_title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- المؤهل -->
+                <div class="col-md-4">
+                    <label for="qualification" class="form-label">المؤهل</label>
+                    <select class="form-select" id="qualification" name="qualification" required>
+                        <option value="">اختر المؤهل</option>
+                        <option value="بكالوريوس" {% if employee and employee.qualification == 'بكالوريوس' %}selected{% endif %}>بكالوريوس</option>
+                        <option value="دبلوم عالي" {% if employee and employee.qualification == 'دبلوم عالي' %}selected{% endif %}>دبلوم عالي</option>
+                        <option value="ماجستير" {% if employee and employee.qualification == 'ماجستير' %}selected{% endif %}>ماجستير</option>
+                        <option value="دكتوراه" {% if employee and employee.qualification == 'دكتوراه' %}selected{% endif %}>دكتوراه</option>
+                    </select>
+                </div>
+                
+                <!-- تخصص بكالوريوس -->
+                <div class="col-md-6">
+                    <label for="bachelor_specialization" class="form-label">تخصص بكالوريوس</label>
+                    <input type="text" class="form-control" id="bachelor_specialization" name="bachelor_specialization"
+                        value="{{ employee.bachelor_specialization if employee else '' }}">
+                </div>
+                
+                <!-- تخصص دبلوم العالي -->
+                <div class="col-md-6">
+                    <label for="high_diploma_specialization" class="form-label">تخصص دبلوم العالي</label>
+                    <input type="text" class="form-control" id="high_diploma_specialization" name="high_diploma_specialization"
+                        value="{{ employee.high_diploma_specialization if employee else '' }}">
+                </div>
+                
+                <!-- تخصص ماجستير -->
+                <div class="col-md-6">
+                    <label for="masters_specialization" class="form-label">تخصص ماجستير</label>
+                    <input type="text" class="form-control" id="masters_specialization" name="masters_specialization"
+                        value="{{ employee.masters_specialization if employee else '' }}">
+                </div>
+                
+                <!-- تخصص دكتوراه -->
+                <div class="col-md-6">
+                    <label for="phd_specialization" class="form-label">تخصص دكتوراه</label>
+                    <input type="text" class="form-control" id="phd_specialization" name="phd_specialization"
+                        value="{{ employee.phd_specialization if employee else '' }}">
+                </div>
+                
+                <!-- المبحث الدراسي -->
+                <div class="col-md-4">
+                    <label for="subject" class="form-label">المبحث الدراسي</label>
+                    <input type="text" class="form-control" id="subject" name="subject"
+                        value="{{ employee.subject if employee else '' }}">
+                </div>
+                
+                <!-- تاريخ التعيين -->
+                <div class="col-md-4">
+                    <label for="appointment_date" class="form-label">تاريخ التعيين</label>
+                    <input type="date" class="form-control" id="appointment_date" name="appointment_date" required
+                        value="{{ employee.appointment_date.strftime('%Y-%m-%d') if employee else '' }}">
+                </div>
+                
+                <!-- المدرسة/القسم -->
+                <div class="col-md-4">
+                    <label for="school_id" class="form-label">{% if is_directorate %}القسم{% else %}المدرسة{% endif %}</label>
+                    <select class="form-select" id="school_id" name="school_id" required>
+                        <option value="">اختر {% if is_directorate %}القسم{% else %}المدرسة{% endif %}</option>
+                        {% for school in schools %}
+                        <option value="{{ school.id }}" {% if employee and employee.school_id == school.id %}selected{% endif %}>{{ school.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-12 mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> حفظ
+                    </button>
+                    <a href="{{ url_for('employee.employees') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> إلغاء
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

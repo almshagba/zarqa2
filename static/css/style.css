@@ -1,0 +1,860 @@
+/* ملف CSS مخصص للتطبيق */
+.export-buttons {
+    margin: 15px 0;
+}
+
+.export-buttons .btn {
+    margin-right: 10px;
+    margin-bottom: 5px;
+}
+
+.table-responsive {
+    margin-top: 20px;
+}
+
+.alert {
+    margin-bottom: 20px;
+}
+
+.loading-indicator {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+@media print {
+    .export-buttons,
+    .btn,
+    .alert {
+        display: none !important;
+    }
+}
+
+/* تنسيقات إضافية للنظام */
+.btn-export {
+    margin: 5px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-excel {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-excel:hover {
+    background-color: #218838;
+}
+
+.btn-pdf {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-pdf:hover {
+    background-color: #c82333;
+}
+
+.btn-diagnostics {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.btn-diagnostics:hover {
+    background-color: #138496;
+}
+
+.message {
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.message.warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.loading {
+    display: none;
+    text-align: center;
+    padding: 20px;
+}
+
+.loading.show {
+    display: block;
+}
+
+/* تحسينات للجداول */
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    text-align: center;
+}
+
+.table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* تحسينات للطباعة */
+@media print {
+    .btn-export, .no-print {
+        display: none !important;
+    }
+    
+    .table {
+        font-size: 12px;
+    }
+}
+
+/* تنسيقات حديثة للقوائم والواجهة */
+
+/* تحسين شريط التنقل */
+.navbar {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+    border-bottom: 3px solid #0056b3;
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.4rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.nav-link {
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border-radius: 5px;
+    margin: 0 2px;
+    position: relative;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    font-weight: bold;
+}
+
+/* تحسين القوائم المنسدلة */
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+    padding: 10px 0;
+    margin-top: 5px;
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+.dropdown-item {
+    padding: 10px 20px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    margin: 2px 8px;
+    position: relative;
+}
+
+.dropdown-item:hover {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    transform: translateX(5px);
+    box-shadow: 0 3px 10px rgba(0, 123, 255, 0.3);
+}
+
+.dropdown-item i {
+    margin-left: 8px;
+    width: 16px;
+    text-align: center;
+}
+
+.dropdown-divider {
+    margin: 8px 0;
+    border-top: 1px solid #e9ecef;
+}
+
+/* تحسين البطاقات */
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 2px solid #007bff;
+    font-weight: bold;
+    padding: 15px 20px;
+    border-radius: 15px 15px 0 0 !important;
+}
+
+.card-title {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+/* تحسين الجداول */
+.table {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+    margin-bottom: 0;
+}
+
+.table thead th {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    font-weight: 600;
+    text-align: center;
+    border: none;
+    padding: 15px 10px;
+    font-size: 0.95rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.table tbody tr {
+    transition: all 0.3s ease;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+    transform: scale(1.01);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.table td {
+    text-align: center;
+    vertical-align: middle;
+    padding: 12px 10px;
+    border-color: #e9ecef;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 123, 255, 0.03);
+}
+
+/* تحسين الأزرار */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    padding: 8px 16px;
+    transition: all 0.3s ease;
+    border: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn:hover:before {
+    left: 100%;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    box-shadow: 0 3px 10px rgba(0, 123, 255, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+    box-shadow: 0 3px 10px rgba(40, 167, 69, 0.3);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    box-shadow: 0 3px 10px rgba(220, 53, 69, 0.3);
+}
+
+.btn-info {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    box-shadow: 0 3px 10px rgba(23, 162, 184, 0.3);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+    box-shadow: 0 3px 10px rgba(255, 193, 7, 0.3);
+    color: #212529;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 0.875rem;
+}
+
+/* تحسين النماذج */
+.form-control {
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    transform: translateY(-1px);
+}
+
+.form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+}
+
+/* تحسين الرسائل */
+.alert {
+    border: none;
+    border-radius: 10px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
+    border-right: 4px solid #28a745;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    color: #721c24;
+    border-right: 4px solid #dc3545;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    color: #856404;
+    border-right: 4px solid #ffc107;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+    color: #0c5460;
+    border-right: 4px solid #17a2b8;
+}
+
+/* تحسين الحاوي الرئيسي */
+.container, .container-fluid {
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+/* تحسين العنوان الرئيسي */
+.header-title {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+    text-align: center;
+}
+
+.header-title h2 {
+    color: #2c3e50;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.header-title h4 {
+    color: #495057;
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.header-logo {
+    max-height: 80px;
+    margin-bottom: 15px;
+    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.2));
+}
+
+/* تحسين الأيقونات */
+.fas, .far {
+    margin-left: 5px;
+}
+
+/* تحسين التجاوب */
+@media (max-width: 768px) {
+    .navbar-nav {
+        text-align: center;
+    }
+    
+    .card {
+        margin-bottom: 15px;
+    }
+    
+    .table-responsive {
+        border-radius: 10px;
+    }
+    
+    .btn {
+        margin-bottom: 5px;
+    }
+}
+
+/* تأثيرات التحميل */
+.loading-indicator {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+.loading-indicator::after {
+    content: '';
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-top: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* تحسين أزرار التصدير */
+.export-buttons {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.export-buttons .btn {
+    margin: 5px;
+    min-width: 120px;
+}
+
+/* تحسين الطباعة */
+@media print {
+    .export-buttons,
+    .btn,
+    .alert,
+    .navbar {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+    }
+    
+    .table {
+        box-shadow: none !important;
+    }
+    
+    .table thead th {
+        background: #f8f9fa !important;
+        color: #000 !important;
+    }
+}
+
+/* تحسين أزرار إضافية لصفحة الموظفين */
+.bg-pink {
+    background-color: #e91e63 !important;
+}
+
+.table th {
+    white-space: nowrap;
+    font-size: 0.9rem;
+}
+
+.table td {
+    font-size: 0.85rem;
+    padding: 8px 6px;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+/* تحسين الاستجابة للشاشات الصغيرة */
+@media (max-width: 992px) {
+    .table th, .table td {
+        font-size: 0.8rem;
+        padding: 6px 4px;
+    }
+    
+    .btn-sm {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.75rem;
+    }
+    
+    .card-header .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .card-header .btn-group .btn {
+        margin-bottom: 2px;
+    }
+}
+
+/* تحسين عرض البيانات */
+.employee-stats {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+}
+
+/* تأثيرات التفاعل */
+.table tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+    transform: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-group .btn {
+    margin: 1px;
+}
+
+/* تحسين عرض الشارات */
+.badge {
+    padding: 0.5em 0.75em;
+    border-radius: 6px;
+}
+
+.badge.bg-secondary {
+    background-color: #6c757d !important;
+}
+
+.badge.bg-info {
+    background-color: #0dcaf0 !important;
+    color: #000;
+}
+
+.badge.bg-success {
+    background-color: #198754 !important;
+}
+
+.badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #000;
+}
+/* تحسينات خاصة لصفحة رصيد الإجازات */
+.leave-balances-table {
+    font-size: 0.85rem;
+}
+
+.leave-balances-table th {
+    font-size: 0.8rem;
+    padding: 10px 5px;
+    white-space: nowrap;
+    vertical-align: middle;
+    min-width: 80px;
+}
+
+.leave-balances-table td {
+    padding: 8px 5px;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.leave-balances-table .employee-name {
+    min-width: 120px;
+    max-width: 150px;
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+.leave-balances-table .ministry-number {
+    min-width: 80px;
+}
+
+.leave-balances-table .department {
+    min-width: 100px;
+    max-width: 120px;
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+.leave-balances-table .badge {
+    font-size: 0.7rem;
+    padding: 0.3em 0.5em;
+    min-width: 30px;
+    display: inline-block;
+}
+
+.leave-balances-table .actions {
+    min-width: 80px;
+}
+
+/* تحسين الاستجابة للشاشات المختلفة */
+@media (max-width: 1400px) {
+    .leave-balances-table {
+        font-size: 0.8rem;
+    }
+    
+    .leave-balances-table th {
+        font-size: 0.75rem;
+        padding: 8px 4px;
+    }
+    
+    .leave-balances-table td {
+        padding: 6px 4px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .leave-balances-table {
+        font-size: 0.75rem;
+    }
+    
+    .leave-balances-table .badge {
+        font-size: 0.65rem;
+        padding: 0.25em 0.4em;
+    }
+}
+
+@media (max-width: 992px) {
+    .leave-balances-table th,
+    .leave-balances-table td {
+        padding: 5px 3px;
+    }
+    
+    .leave-balances-table .btn-sm {
+        padding: 2px 6px;
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .leave-balances-table {
+        font-size: 0.7rem;
+    }
+    
+    .leave-balances-table th {
+        font-size: 0.65rem;
+    }
+    
+    /* إخفاء بعض الأعمدة في الشاشات الصغيرة */
+    .leave-balances-table .hide-mobile {
+        display: none;
+    }
+}
+
+/* تحسين عرض الجدول */
+.table-responsive {
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.table-responsive::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #007bff;
+    border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #0056b3;
+}
+
+/* تحسينات خاصة لجدول رصيد الإجازات - تجنب شريط التنقل الأفقي */
+.leave-balances-container .table-responsive {
+    overflow-x: hidden !important;
+}
+
+.leave-balances-table {
+    table-layout: fixed;
+    width: 100%;
+    font-size: 1rem !important;
+}
+
+.leave-balances-table th {
+    font-size: 1.1rem !important;
+    font-weight: bold;
+    padding: 4px 2px !important;
+    text-align: center;
+    vertical-align: middle;
+    white-space: normal;
+    word-wrap: break-word;
+    line-height: 1.2;
+}
+
+.leave-balances-table td {
+    font-size: 1rem !important;
+    padding: 3px 2px !important;
+    text-align: center;
+    vertical-align: middle;
+    white-space: normal;
+    word-wrap: break-word;
+    line-height: 1.1;
+}
+
+/* تحديد عرض الأعمدة لتجنب شريط التنقل */
+.leave-balances-table th:nth-child(1) { width: 3%; }  /* # */
+.leave-balances-table th:nth-child(2) { width: 15%; } /* اسم الموظف */
+.leave-balances-table th:nth-child(3) { width: 8%; }  /* الرقم الوزاري */
+.leave-balances-table th:nth-child(4) { width: 12%; } /* القسم */
+.leave-balances-table th:nth-child(5) { width: 7%; }  /* رصيد الحالية */
+.leave-balances-table th:nth-child(6) { width: 7%; }  /* رصيد السابقة */
+.leave-balances-table th:nth-child(7) { width: 7%; }  /* المجموع السنوي */
+.leave-balances-table th:nth-child(8) { width: 7%; }  /* المستخدم السنوي */
+.leave-balances-table th:nth-child(9) { width: 7%; }  /* المتبقي السنوي */
+.leave-balances-table th:nth-child(10) { width: 7%; } /* رصيد المرضية */
+.leave-balances-table th:nth-child(11) { width: 7%; } /* المستخدم المرضي */
+.leave-balances-table th:nth-child(12) { width: 7%; } /* المتبقي المرضي */
+.leave-balances-table th:nth-child(13) { width: 6%; } /* الإجراءات */
+
+/* تحسين عرض الشارات */
+.leave-balances-table .badge {
+    font-size: 0.9rem !important;
+    padding: 0.2em 0.4em;
+    display: block;
+    margin: 1px auto;
+    min-width: 25px;
+}
+
+/* تحسين الأزرار */
+.leave-balances-table .btn-sm {
+    padding: 2px 4px;
+    font-size: 0.8rem;
+    margin: 1px;
+}
+
+/* تحسين عرض النص الطويل */
+.leave-balances-table .employee-name,
+.leave-balances-table .department {
+    font-size: 0.9rem !important;
+    line-height: 1.1;
+    max-height: 2.2em;
+    overflow: hidden;
+}
+
+/* إزالة شريط التنقل الأفقي نهائياً */
+.leave-balances-container {
+    overflow: hidden;
+}
+
+.leave-balances-container .table-responsive {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* تحسينات للشاشات الصغيرة */
+@media (max-width: 1200px) {
+    .leave-balances-table {
+        font-size: 0.9rem !important;
+    }
+    
+    .leave-balances-table th {
+        font-size: 1rem !important;
+        padding: 3px 1px !important;
+    }
+    
+    .leave-balances-table td {
+        font-size: 0.9rem !important;
+        padding: 2px 1px !important;
+    }
+}
+
+@media (max-width: 992px) {
+    .leave-balances-table {
+        font-size: 0.8rem !important;
+    }
+    
+    .leave-balances-table th {
+        font-size: 0.9rem !important;
+    }
+    
+    .leave-balances-table td {
+        font-size: 0.8rem !important;
+    }
+    
+    .leave-balances-table .badge {
+        font-size: 0.7rem !important;
+    }
+}
