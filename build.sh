@@ -15,14 +15,27 @@ python --version
 echo "📦 Upgrading pip..."
 pip install --upgrade pip
 
-# Install Python dependencies
+# Install Python dependencies with optimizations
 echo "📚 Installing Python dependencies..."
-pip install -r requirements.txt
+
+# Install numpy first (pandas dependency)
+echo "🔢 Installing numpy..."
+pip install --only-binary=all numpy==1.24.4
+
+# Install pandas with pre-compiled binaries
+echo "🐼 Installing pandas..."
+pip install --only-binary=all pandas==2.0.3
+
+# Install remaining dependencies
+echo "📦 Installing remaining dependencies..."
+pip install -r requirements.txt --only-binary=:all: || pip install -r requirements.txt
 
 # Verify critical imports
 echo "✅ Verifying installations..."
 python -c "import flask; print(f'✓ Flask version: {flask.__version__}')"
 python -c "import sqlalchemy; print(f'✓ SQLAlchemy version: {sqlalchemy.__version__}')"
+python -c "import numpy; print(f'✓ NumPy version: {numpy.__version__}')"
+python -c "import pandas; print(f'✓ Pandas version: {pandas.__version__}')"
 python -c "import gunicorn; print('✓ Gunicorn installed successfully')"
 
 # Test app import
