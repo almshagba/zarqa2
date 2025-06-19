@@ -4,13 +4,11 @@
 services:
   # Web Service
   - type: web
-    name: employee-management-system
+    name: zarqa2
     env: python
-    region: oregon
-    plan: starter
     buildCommand: "./build.sh"
     pythonVersion: 3.12.3  # ✅ Pin compatible Python version
-    startCommand: "gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --keep-alive 2 --max-requests 1000 --max-requests-jitter 100 wsgi:app"
+    startCommand: "gunicorn app:app"
     healthCheckPath: "/"
     autoDeploy: true
     branch: master
