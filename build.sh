@@ -11,6 +11,10 @@ echo "📅 Build started at: $(date)"
 echo "🐍 Python version:"
 python --version
 
+# Set environment variables to prevent compilation issues
+export PANDAS_NO_BUILD_ISOLATION=1
+export NUMPY_NO_BUILD_ISOLATION=1
+
 # Upgrade pip and build tools for Python 3.13 compatibility
 echo "📦 Upgrading pip and build tools..."
 pip install --upgrade pip setuptools wheel
@@ -24,7 +28,7 @@ pip install --only-binary=all numpy==1.26.4
 
 # Install pandas with pre-compiled binaries - Python 3.13 compatible
 echo "🐼 Installing pandas..."
-pip install --only-binary=all pandas==2.2.2
+pip install --only-binary=all pandas==2.2.3
 
 # Install remaining dependencies
 echo "📦 Installing remaining dependencies..."
