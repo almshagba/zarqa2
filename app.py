@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
-from flask import Flask, session, request, redirect, url_for
 from flask_login import LoginManager, current_user
 from database import db
 from config import config
