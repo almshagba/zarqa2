@@ -7,8 +7,8 @@ services:
     name: zarqa2
     env: python
     buildCommand: "./build.sh"
-    pythonVersion: 3.12.3  # ✅ Pin compatible Python version
-    startCommand: "gunicorn app:app"
+build:
+  pythonVersion: 3.12.3    startCommand: "gunicorn app:app"
     healthCheckPath: "/"
     autoDeploy: true
     branch: master
